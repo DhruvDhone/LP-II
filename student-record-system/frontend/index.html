@@ -208,3 +208,433 @@
 
 </body>
 </html>
+<!--
+AWS DEPLOYMENT STEPS
+Cloud-Based Student Record Management System
+
+Project folder on laptop:
+~/Downloads/student-record-system
+
+Folder structure:
+student-record-system
+├── backend
+│   ├── package.json
+│   └── server.js
+└── frontend
+    └── index.html
+
+Step 1: Create AWS EC2 instance
+
+Open AWS Console and go to EC2.
+
+Click Launch Instance.
+
+Enter instance name:
+
+student-record-system
+
+Select AMI:
+
+Ubuntu
+
+Select instance type:
+
+t2.micro or t3.micro
+
+Select existing key pair or create a new key pair.
+
+In Security Group, add these inbound rules:
+
+SSH
+Port: 22
+Source: My IP
+
+HTTP
+Port: 80
+Source: 0.0.0.0/0
+
+Custom TCP
+Port: 5000
+Source: 0.0.0.0/0
+
+Launch the instance.
+
+After launching, copy the Public IPv4 address of the instance.
+
+Step 2: Connect to AWS instance from laptop
+
+Open terminal on laptop.
+
+Go to Downloads folder:
+
+cd ~/Downloads
+
+Give permission to key file:
+
+chmod 400 your-key.pem
+
+Connect to AWS instance:
+
+ssh -i your-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+
+Example:
+
+ssh -i website-key.pem ubuntu@3.91.30.11
+
+Step 3: Install required software on AWS Ubuntu
+
+Run these commands on AWS instance:
+
+sudo apt update
+
+sudo apt install nodejs npm nginx -y
+
+Check versions:
+
+node -v
+
+npm -v
+
+nginx -v
+
+Step 4: Copy project from laptop Downloads to AWS instance
+
+Open a new terminal on laptop.
+
+Do not close the AWS terminal.
+
+Run this command from laptop:
+
+scp -i ~/Downloads/your-key.pem -r ~/Downloads/student-record-system ubuntu@YOUR_EC2_PUBLIC_IP:/home/ubuntu/
+
+Example:
+
+scp -i ~/Downloads/website-key.pem -r ~/Downloads/student-record-system ubuntu@3.91.30.11:/home/ubuntu/
+
+Step 5: Check project on AWS
+
+Go back to AWS terminal.
+
+Run:
+
+cd ~
+
+ls
+
+cd student-record-system
+
+ls
+
+You should see:
+
+backend frontend
+
+Check backend folder:
+
+ls backend
+
+You should see:
+
+package.json server.js
+
+Check frontend folder:
+
+ls frontend
+
+You should see:
+
+index.html
+
+Step 6: Install backend dependencies
+
+Run on AWS terminal:
+
+cd ~/student-record-system/backend
+
+npm install
+
+Step 7: Start backend server temporarily
+
+Run:
+
+node server.js
+
+You should see:
+
+Server running on port 5000
+
+Keep this terminal open for now.
+
+Step 8: Open second AWS terminal
+
+Open another terminal on laptop and connect again:
+
+cd ~/Downloads
+
+ssh -i your-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+
+Example:
+
+ssh -i website-key.pem ubuntu@3.91.30.11
+
+Step 9: Copy frontend to Nginx web root
+
+Run in second AWS terminal:
+
+sudo rm -rf /var/www/html/*
+
+sudo cp ~/student-record-system/frontend/index.html /var/www/html/
+
+Check:
+
+ls /var/www/html
+
+You should see:
+
+index.html
+
+Step 10: Configure Nginx reverse proxy
+
+Run:
+
+sudo nano /etc/nginx/sites-available/default
+
+Delete the old content and paste this:
+
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+    index index.html;
+
+    server_name _;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+Save the file:
+
+CTRL + O
+Enter
+CTRL + X
+
+Step 11: Restart Nginx
+
+Run:
+
+sudo nginx -t
+
+sudo systemctl restart nginx
+
+sudo systemctl status nginx
+
+If it shows active running, it is correct.
+
+Press q to exit the status screen.
+
+Step 12: Open website in browser
+
+Open browser and type:
+
+http://YOUR_EC2_PUBLIC_IP
+
+Example:
+
+http://3.91.30.11
+
+The Student Record Management System page should open.
+
+Try adding one student record:
+
+Name: Dhruv Dhone
+Roll No: 31413
+Department: Computer Engineering
+Email: dhruv@gmail.com
+Phone: 9876543210
+
+Click Save Student.
+
+The record should appear in the table.
+
+Step 13: Test backend API directly
+
+In AWS terminal, run:
+
+curl http://localhost:5000/students
+
+Add sample student using API:
+
+curl -X POST http://localhost:5000/students \
+-H "Content-Type: application/json" \
+-d '{"name":"Dhruv Dhone","roll_no":"31413","department":"Computer Engineering","email":"dhruv@gmail.com","phone":"9876543210"}'
+
+Check records again:
+
+curl http://localhost:5000/students
+
+Step 14: Keep backend running permanently using PM2
+
+Go to the terminal where node server.js is running.
+
+Stop it using:
+
+CTRL + C
+
+Now run:
+
+sudo npm install -g pm2
+
+cd ~/student-record-system/backend
+
+pm2 start server.js --name student-backend
+
+pm2 save
+
+pm2 startup
+
+After running pm2 startup, it will show one command starting with:
+
+sudo env PATH=...
+
+Copy that full command and run it once.
+
+Then check:
+
+pm2 status
+
+You should see:
+
+student-backend online
+
+Step 15: Final check
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+
+Check backend:
+
+pm2 status
+
+Open website:
+
+http://YOUR_EC2_PUBLIC_IP
+
+Frontend runs on port 80 using Nginx.
+
+Backend runs on port 5000 using Node.js.
+
+Database is stored as students.db inside backend folder.
+
+Common fixes
+
+If website is not opening, check AWS Security Group. HTTP port 80 must be open for 0.0.0.0/0.
+
+Then run:
+
+sudo systemctl restart nginx
+
+If backend is not connected, check:
+
+pm2 status
+
+If backend is not running, run:
+
+cd ~/student-record-system/backend
+
+pm2 start server.js --name student-backend
+
+If old default Nginx page is showing, run:
+
+sudo rm -rf /var/www/html/*
+
+sudo cp ~/student-record-system/frontend/index.html /var/www/html/
+
+sudo systemctl restart nginx
+
+If SSH does not connect, check that the instance is running, the public IP is correct, the key file is correct, and the key permission is correct.
+
+Run:
+
+chmod 400 your-key.pem
+
+If port 5000 is not working, test locally on AWS:
+
+curl http://localhost:5000/students
+
+If this works, then backend is fine and Nginx reverse proxy should be checked.
+
+Run:
+
+sudo nginx -t
+
+sudo systemctl restart nginx
+
+Final command summary
+
+From laptop terminal:
+
+cd ~/Downloads
+
+chmod 400 your-key.pem
+
+ssh -i your-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+
+Copy project from laptop to AWS:
+
+scp -i ~/Downloads/your-key.pem -r ~/Downloads/student-record-system ubuntu@YOUR_EC2_PUBLIC_IP:/home/ubuntu/
+
+On AWS terminal:
+
+sudo apt update
+
+sudo apt install nodejs npm nginx -y
+
+cd ~/student-record-system/backend
+
+npm install
+
+node server.js
+
+On second AWS terminal:
+
+sudo rm -rf /var/www/html/*
+
+sudo cp ~/student-record-system/frontend/index.html /var/www/html/
+
+sudo nano /etc/nginx/sites-available/default
+
+sudo nginx -t
+
+sudo systemctl restart nginx
+
+For permanent backend:
+
+sudo npm install -g pm2
+
+cd ~/student-record-system/backend
+
+pm2 start server.js --name student-backend
+
+pm2 save
+
+pm2 startup
+
+pm2 status
+
+Final website URL:
+
+http://YOUR_EC2_PUBLIC_IP
+-->
