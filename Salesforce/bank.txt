@@ -1,0 +1,211 @@
+public class BankAccountSystem {
+
+    // CREATE ACCOUNT
+    public static void createAccount(Integer empId, String empName, String email, Date birthDate, String department, Decimal balance) {
+
+        Bank_Account__c acc = new Bank_Account__c();
+
+        acc.Name = empName;
+        acc.Emp_ID__c = empId;
+        acc.Emp_Name__c = empName;
+        acc.Email__c = email;
+        acc.Birth_Date__c = birthDate;
+        acc.Department__c = department;
+        acc.Balance__c = balance;
+
+        insert acc;
+
+        System.debug('Account created successfully');
+        System.debug('Record Id: ' + acc.Id);
+    }
+
+    // DISPLAY ALL ACCOUNTS
+    public static void displayAllAccounts() {
+
+        List<Bank_Account__c> accounts = [
+            SELECT Id, Emp_ID__c, Emp_Name__c, Email__c, Birth_Date__c, Department__c, Balance__c
+            FROM Bank_Account__c
+        ];
+
+        if(accounts.isEmpty()) {
+            System.debug('No bank accounts found');
+        } else {
+            for(Bank_Account__c acc : accounts) {
+                System.debug('-------------------------');
+                System.debug('Record Id: ' + acc.Id);
+                System.debug('Emp ID: ' + acc.Emp_ID__c);
+                System.debug('Emp Name: ' + acc.Emp_Name__c);
+                System.debug('Email: ' + acc.Email__c);
+                System.debug('Birth Date: ' + acc.Birth_Date__c);
+                System.debug('Department: ' + acc.Department__c);
+                System.debug('Balance: ' + acc.Balance__c);
+            }
+        }
+    }
+
+    // SEARCH ACCOUNT BY EMP ID
+    public static void searchAccount(Integer empId) {
+
+        List<Bank_Account__c> accounts = [
+            SELECT Id, Emp_ID__c, Emp_Name__c, Email__c, Birth_Date__c, Department__c, Balance__c
+            FROM Bank_Account__c
+            WHERE Emp_ID__c = :empId
+        ];
+
+        if(accounts.isEmpty()) {
+            System.debug('Account not found');
+        } else {
+            Bank_Account__c acc = accounts[0];
+
+            System.debug('Account found');
+            System.debug('Record Id: ' + acc.Id);
+            System.debug('Emp ID: ' + acc.Emp_ID__c);
+            System.debug('Emp Name: ' + acc.Emp_Name__c);
+            System.debug('Email: ' + acc.Email__c);
+            System.debug('Birth Date: ' + acc.Birth_Date__c);
+            System.debug('Department: ' + acc.Department__c);
+            System.debug('Balance: ' + acc.Balance__c);
+        }
+    }
+
+    // UPDATE ACCOUNT
+    public static void updateAccount(Integer empId, String newName, String newEmail, String newDepartment) {
+
+        List<Bank_Account__c> accounts = [
+            SELECT Id, Emp_Name__c, Email__c, Department__c
+            FROM Bank_Account__c
+            WHERE Emp_ID__c = :empId
+        ];
+
+        if(accounts.isEmpty()) {
+            System.debug('Account not found');
+        } else {
+            Bank_Account__c acc = accounts[0];
+
+            acc.Name = newName;
+            acc.Emp_Name__c = newName;
+            acc.Email__c = newEmail;
+            acc.Department__c = newDepartment;
+
+            update acc;
+
+            System.debug('Account updated successfully');
+        }
+    }
+
+    // DEPOSIT MONEY
+    public static void deposit(Integer empId, Decimal amount) {
+
+        List<Bank_Account__c> accounts = [
+            SELECT Id, Balance__c
+            FROM Bank_Account__c
+            WHERE Emp_ID__c = :empId
+        ];
+
+        if(accounts.isEmpty()) {
+            System.debug('Account not found');
+        } else {
+            Bank_Account__c acc = accounts[0];
+
+            acc.Balance__c = acc.Balance__c + amount;
+
+            update acc;
+
+            System.debug('Amount deposited successfully');
+            System.debug('New Balance: ' + acc.Balance__c);
+        }
+    }
+
+    // WITHDRAW MONEY
+    public static void withdraw(Integer empId, Decimal amount) {
+
+        List<Bank_Account__c> accounts = [
+            SELECT Id, Balance__c
+            FROM Bank_Account__c
+            WHERE Emp_ID__c = :empId
+        ];
+
+        if(accounts.isEmpty()) {
+            System.debug('Account not found');
+        } else {
+            Bank_Account__c acc = accounts[0];
+
+            if(acc.Balance__c >= amount) {
+                acc.Balance__c = acc.Balance__c - amount;
+                update acc;
+
+                System.debug('Amount withdrawn successfully');
+                System.debug('New Balance: ' + acc.Balance__c);
+            } else {
+                System.debug('Insufficient balance');
+            }
+        }
+    }
+
+    // DELETE ACCOUNT
+    public static void deleteAccount(Integer empId) {
+
+        List<Bank_Account__c> accounts = [
+            SELECT Id
+            FROM Bank_Account__c
+            WHERE Emp_ID__c = :empId
+        ];
+
+        if(accounts.isEmpty()) {
+            System.debug('Account not found');
+        } else {
+            delete accounts[0];
+            System.debug('Account deleted successfully');
+        }
+    }
+}
+
+---------
+
+Integer choice = 1;
+
+System.debug('===== BANK ACCOUNT SYSTEM =====');
+System.debug('1. Create Account');
+System.debug('2. Display All Accounts');
+System.debug('3. Search Account');
+System.debug('4. Update Account');
+System.debug('5. Deposit Money');
+System.debug('6. Withdraw Money');
+System.debug('7. Delete Account');
+
+if(choice == 1) {
+    BankAccountSystem.createAccount(
+        101,
+        'Dhruv Dhone',
+        'dhruv@gmail.com',
+        Date.newInstance(2005, 5, 14),
+        'Computer Engineering',
+        5000
+    );
+}
+else if(choice == 2) {
+    BankAccountSystem.displayAllAccounts();
+}
+else if(choice == 3) {
+    BankAccountSystem.searchAccount(101);
+}
+else if(choice == 4) {
+    BankAccountSystem.updateAccount(
+        101,
+        'Dhruv D',
+        'dhruvupdated@gmail.com',
+        'IT'
+    );
+}
+else if(choice == 5) {
+    BankAccountSystem.deposit(101, 2000);
+}
+else if(choice == 6) {
+    BankAccountSystem.withdraw(101, 1000);
+}
+else if(choice == 7) {
+    BankAccountSystem.deleteAccount(101);
+}
+else {
+    System.debug('Invalid choice');
+}
