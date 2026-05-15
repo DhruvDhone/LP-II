@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Banking Chatbot</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #020617, #1e3a8a, #2563eb);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .main-container {
+            width: 1000px;
+            height: 680px;
+            display: flex;
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+        }
+
+        .sidebar {
+            width: 320px;
+            background: #0f172a;
+            color: white;
+            padding: 25px;
+        }
+
+        .bank-logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .bank-subtitle {
+            color: #93c5fd;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .profile-card {
+            background: #1e293b;
+            padding: 18px;
+            border-radius: 18px;
+            margin-bottom: 18px;
+        }
+
+        .profile-card h3 {
+            margin: 0 0 12px;
+            font-size: 19px;
+        }
+
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin: 9px 0;
+            color: #e2e8f0;
+        }
+
+        .profile-row span:last-child {
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .balance-box {
+            background: linear-gradient(135deg, #2563eb, #38bdf8);
+            padding: 18px;
+            border-radius: 18px;
+            margin-bottom: 18px;
+        }
+
+        .balance-box p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .balance-box h2 {
+            margin: 8px 0 0;
+            font-size: 28px;
+        }
+
+        .mini-info {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: #cbd5e1;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+        }
+
+        .chat-header {
+            background: white;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            color: #0f172a;
+        }
+
+        .chat-header p {
+            margin: 6px 0 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .message {
+            max-width: 78%;
+            padding: 13px 16px;
+            margin-bottom: 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: normal;
+        }
+
+        .bot {
+            background: white;
+            color: #111827;
+            border-top-left-radius: 4px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .user {
+            background: #2563eb;
+            color: white;
+            margin-left: auto;
+            border-top-right-radius: 4px;
+        }
+
+        .data-card {
+            background: #f1f5f9;
+            border-left: 4px solid #2563eb;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 10px;
+        }
+
+        .data-card b {
+            color: #1d4ed8;
+        }
+
+        .options {
+            padding: 13px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .options button {
+            border: none;
+            background: #e0ecff;
+            color: #1d4ed8;
+            padding: 9px 13px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        .options button:hover {
+            background: #2563eb;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .input-area {
+            display: flex;
+            padding: 14px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 13px;
+            border: 1px solid #cbd5e1;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .input-area button {
+            margin-left: 8px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            padding: 13px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .input-area button:hover {
+            background: #1d4ed8;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container">
+
+        <div class="sidebar">
+            <div class="bank-logo">Dhone Bank</div>
+            <div class="bank-subtitle">Secure Digital Banking Assistant</div>
+
+            <div class="profile-card">
+                <h3>Customer Profile</h3>
+                <div class="profile-row">
+                    <span>Name</span>
+                    <span>Dhruv Dhone</span>
+                </div>
+                <div class="profile-row">
+                    <span>Customer ID</span>
+                    <span>CUST10245</span>
+                </div>
+                <div class="profile-row">
+                    <span>Account No.</span>
+                    <span>XXXX4587</span>
+                </div>
+                <div class="profile-row">
+                    <span>Account Type</span>
+                    <span>Savings</span>
+                </div>
+                <div class="profile-row">
+                    <span>KYC Status</span>
+                    <span>Verified</span>
+                </div>
+            </div>
+
+            <div class="balance-box">
+                <p>Available Balance</p>
+                <h2>₹84,750.60</h2>
+            </div>
+
+            <div class="mini-info">
+                Debit Card: Active<br>
+                Credit Card Limit: ₹1,20,000<br>
+                Loan Eligibility: ₹5,00,000<br>
+                UPI Status: Active<br>
+                Branch: Pune Main Branch<br>
+                Last Login: Today, 10:45 AM
+            </div>
+        </div>
+
+        <div class="chat-container">
+
+            <div class="chat-header">
+                <h2>Banking Chatbot</h2>
+                <p>Rule based GUI chatbot with pre-filled banking data</p>
+            </div>
+
+            <div class="chat-box" id="chatBox"></div>
+
+            <div class="options">
+                <button onclick="quickOption('profile')">Profile</button>
+                <button onclick="quickOption('balance')">Balance</button>
+                <button onclick="quickOption('transactions')">Transactions</button>
+                <button onclick="quickOption('loan')">Loan</button>
+                <button onclick="quickOption('card')">Card</button>
+                <button onclick="quickOption('fund transfer')">Fund Transfer</button>
+                <button onclick="quickOption('emi')">EMI</button>
+                <button onclick="quickOption('offers')">Offers</button>
+                <button onclick="quickOption('branch')">Branch</button>
+                <button onclick="quickOption('help')">Help</button>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Ask about balance, loan, card, EMI, transactions...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        let chatBox = document.getElementById("chatBox");
+        let userInput = document.getElementById("userInput");
+
+        let customer = {
+            name: "Dhruv Dhone",
+            customerId: "CUST10245",
+            accountNumber: "SBINXXXX4587",
+            accountType: "Savings Account",
+            balance: 84750.60,
+            branch: "Pune Main Branch",
+            ifsc: "DHONE0004587",
+            mobile: "XXXXXX5187",
+            email: "dhruv****@gmail.com",
+            kyc: "Verified",
+            nominee: "Registered",
+            pan: "ABCDE1234F",
+            aadhaar: "XXXX-XXXX-7890",
+            upi: "dhruv4587@upi"
+        };
+
+        let card = {
+            debitCard: "Active",
+            debitLimit: 25000,
+            creditCard: "Active",
+            creditLimit: 120000,
+            usedLimit: 34500,
+            availableLimit: 85500,
+            rewardPoints: 1840,
+            cardLastDigits: "7789"
+        };
+
+        let loan = {
+            eligibleAmount: 500000,
+            activeLoan: "Education Loan",
+            loanAccount: "LOAN20264587",
+            outstanding: 142000,
+            emi: 6850,
+            nextEmiDate: "05 June 2026",
+            interestRate: "9.2% per annum",
+            tenure: "24 months remaining"
+        };
+
+        let transactions = [
+            { date: "15 May 2026", type: "UPI Credit", details: "Received from Rahul", amount: "+₹4,500" },
+            { date: "14 May 2026", type: "Debit Card", details: "Amazon Shopping", amount: "-₹1,299" },
+            { date: "13 May 2026", type: "UPI Debit", details: "Zomato Payment", amount: "-₹430" },
+            { date: "12 May 2026", type: "ATM Withdrawal", details: "Pune ATM", amount: "-₹5,000" },
+            { date: "10 May 2026", type: "Salary Credit", details: "Monthly Salary", amount: "+₹32,000" }
+        ];
+
+        let offers = [
+            "Pre-approved Personal Loan up to ₹5,00,000",
+            "Credit Card cashback up to 10% on online shopping",
+            "Fixed Deposit interest rate up to 7.5%",
+            "Zero processing fee on Education Loan",
+            "Free UPI transactions available 24/7"
+        ];
+
+        window.onload = function () {
+            addBotMessage(
+                "Hello <b>" + customer.name + "</b>! Welcome to Dhone Bank Assistant.<br>" +
+                "Your banking profile is already loaded safely for this demo.<br>" +
+                "<span class='tag'>Customer ID: " + customer.customerId + "</span>"
+            );
+
+            addBotMessage(
+                "You can ask me about balance, profile, transactions, loan, EMI, debit card, credit card, fund transfer, branch, IFSC, offers and customer support."
+            );
+        };
+
+        function addBotMessage(message) {
+            let div = document.createElement("div");
+            div.className = "message bot";
+            div.innerHTML = message;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function addUserMessage(message) {
+            let div = document.createElement("div");
+            div.className = "message user";
+            div.innerHTML = message;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage() {
+            let message = userInput.value.trim();
+
+            if (message === "") {
+                return;
+            }
+
+            addUserMessage(message);
+            userInput.value = "";
+
+            setTimeout(function () {
+                reply(message.toLowerCase());
+            }, 400);
+        }
+
+        function quickOption(option) {
+            addUserMessage(option);
+            setTimeout(function () {
+                reply(option.toLowerCase());
+            }, 400);
+        }
+
+        function formatMoney(amount) {
+            return "₹" + amount.toLocaleString("en-IN");
+        }
+
+        function getTransactionData() {
+            let data = "<div class='data-card'><b>Recent Transactions</b><br><br>";
+
+            for (let i = 0; i < transactions.length; i++) {
+                data += transactions[i].date + " - " +
+                    transactions[i].type + "<br>" +
+                    transactions[i].details + " : <b>" +
+                    transactions[i].amount + "</b><br><br>";
+            }
+
+            data += "</div>";
+            return data;
+        }
+
+        function reply(message) {
+            let response = "";
+
+            if (
+                message.includes("hi") ||
+                message.includes("hello") ||
+                message.includes("hey")
+            ) {
+                response =
+                    "Hello <b>" + customer.name + "</b>! How can I help you today?<br>" +
+                    "You can use the quick buttons or type your query.";
+            }
+
+            else if (
+                message.includes("profile") ||
+                message.includes("details") ||
+                message.includes("customer") ||
+                message.includes("id")
+            ) {
+                response =
+                    "Here are your customer details:" +
+                    "<div class='data-card'>" +
+                    "<b>Name:</b> " + customer.name + "<br>" +
+                    "<b>Customer ID:</b> " + customer.customerId + "<br>" +
+                    "<b>Account Number:</b> " + customer.accountNumber + "<br>" +
+                    "<b>Account Type:</b> " + customer.accountType + "<br>" +
+                    "<b>Mobile:</b> " + customer.mobile + "<br>" +
+                    "<b>Email:</b> " + customer.email + "<br>" +
+                    "<b>KYC Status:</b> " + customer.kyc + "<br>" +
+                    "<b>Nominee:</b> " + customer.nominee +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("balance") ||
+                message.includes("amount") ||
+                message.includes("money")
+            ) {
+                response =
+                    "Your current account balance is:" +
+                    "<div class='data-card'>" +
+                    "<b>Available Balance:</b> " + formatMoney(customer.balance) + "<br>" +
+                    "<b>Account Type:</b> " + customer.accountType + "<br>" +
+                    "<b>Account Number:</b> " + customer.accountNumber + "<br>" +
+                    "<b>Last Updated:</b> Today, 10:45 AM" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("transaction") ||
+                message.includes("history") ||
+                message.includes("statement")
+            ) {
+                response =
+                    "Here is your latest mini statement:" +
+                    getTransactionData();
+            }
+
+            else if (
+                message.includes("loan")
+            ) {
+                response =
+                    "Your loan information is:" +
+                    "<div class='data-card'>" +
+                    "<b>Loan Eligibility:</b> " + formatMoney(loan.eligibleAmount) + "<br>" +
+                    "<b>Active Loan:</b> " + loan.activeLoan + "<br>" +
+                    "<b>Loan Account:</b> " + loan.loanAccount + "<br>" +
+                    "<b>Outstanding Amount:</b> " + formatMoney(loan.outstanding) + "<br>" +
+                    "<b>Interest Rate:</b> " + loan.interestRate + "<br>" +
+                    "<b>Tenure:</b> " + loan.tenure +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("emi")
+            ) {
+                response =
+                    "Your EMI details are:" +
+                    "<div class='data-card'>" +
+                    "<b>Monthly EMI:</b> " + formatMoney(loan.emi) + "<br>" +
+                    "<b>Next EMI Date:</b> " + loan.nextEmiDate + "<br>" +
+                    "<b>Outstanding Loan:</b> " + formatMoney(loan.outstanding) + "<br>" +
+                    "<b>Status:</b> Active and Regular" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("card") ||
+                message.includes("debit") ||
+                message.includes("credit")
+            ) {
+                response =
+                    "Your card details are:" +
+                    "<div class='data-card'>" +
+                    "<b>Debit Card:</b> " + card.debitCard + "<br>" +
+                    "<b>Debit Card Last Digits:</b> " + card.cardLastDigits + "<br>" +
+                    "<b>Daily Debit Limit:</b> " + formatMoney(card.debitLimit) + "<br>" +
+                    "<b>Credit Card:</b> " + card.creditCard + "<br>" +
+                    "<b>Total Credit Limit:</b> " + formatMoney(card.creditLimit) + "<br>" +
+                    "<b>Used Limit:</b> " + formatMoney(card.usedLimit) + "<br>" +
+                    "<b>Available Limit:</b> " + formatMoney(card.availableLimit) + "<br>" +
+                    "<b>Reward Points:</b> " + card.rewardPoints +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("block") ||
+                message.includes("lost")
+            ) {
+                response =
+                    "Card blocking service:" +
+                    "<div class='data-card'>" +
+                    "Your debit card ending with <b>" + card.cardLastDigits + "</b> can be blocked instantly.<br>" +
+                    "For this demo, blocking is not actually performed.<br>" +
+                    "<b>Emergency Helpline:</b> 1800-123-4567<br>" +
+                    "<b>Service Available:</b> 24/7" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("transfer") ||
+                message.includes("fund") ||
+                message.includes("upi") ||
+                message.includes("neft") ||
+                message.includes("rtgs") ||
+                message.includes("imps")
+            ) {
+                response =
+                    "Fund transfer options available:" +
+                    "<div class='data-card'>" +
+                    "<b>UPI ID:</b> " + customer.upi + "<br>" +
+                    "<b>IMPS:</b> Available 24/7<br>" +
+                    "<b>NEFT:</b> Available in banking hours<br>" +
+                    "<b>RTGS:</b> For high value transactions<br>" +
+                    "<b>Daily UPI Limit:</b> ₹1,00,000<br>" +
+                    "<b>Daily IMPS Limit:</b> ₹2,00,000" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("branch") ||
+                message.includes("ifsc") ||
+                message.includes("address")
+            ) {
+                response =
+                    "Your home branch details:" +
+                    "<div class='data-card'>" +
+                    "<b>Branch:</b> " + customer.branch + "<br>" +
+                    "<b>IFSC Code:</b> " + customer.ifsc + "<br>" +
+                    "<b>Address:</b> FC Road, Shivajinagar, Pune<br>" +
+                    "<b>Working Hours:</b> 10:00 AM to 4:00 PM<br>" +
+                    "<b>Saturday:</b> Open on 1st, 3rd and 5th Saturday" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("kyc")
+            ) {
+                response =
+                    "Your KYC details are:" +
+                    "<div class='data-card'>" +
+                    "<b>KYC Status:</b> " + customer.kyc + "<br>" +
+                    "<b>PAN:</b> " + customer.pan + "<br>" +
+                    "<b>Aadhaar:</b> " + customer.aadhaar + "<br>" +
+                    "<b>Last KYC Update:</b> 12 January 2026" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("offer") ||
+                message.includes("offers")
+            ) {
+                response = "Available banking offers:<div class='data-card'>";
+
+                for (let i = 0; i < offers.length; i++) {
+                    response += (i + 1) + ". " + offers[i] + "<br>";
+                }
+
+                response += "</div>";
+            }
+
+            else if (
+                message.includes("interest") ||
+                message.includes("fd") ||
+                message.includes("deposit")
+            ) {
+                response =
+                    "Interest rate information:" +
+                    "<div class='data-card'>" +
+                    "<b>Savings Account:</b> 3.5% per annum<br>" +
+                    "<b>Fixed Deposit:</b> 6.5% to 7.5% per annum<br>" +
+                    "<b>Senior Citizen FD:</b> Up to 8.0% per annum<br>" +
+                    "<b>Recurring Deposit:</b> 6.8% per annum" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("support") ||
+                message.includes("care") ||
+                message.includes("contact")
+            ) {
+                response =
+                    "Customer support details:" +
+                    "<div class='data-card'>" +
+                    "<b>Helpline:</b> 1800-123-4567<br>" +
+                    "<b>Email:</b> support@dhonebank.com<br>" +
+                    "<b>Card Emergency:</b> 1800-999-1111<br>" +
+                    "<b>Support Timing:</b> 24/7 for emergency services" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("help")
+            ) {
+                response =
+                    "You can ask me these questions:" +
+                    "<div class='data-card'>" +
+                    "1. Show my profile<br>" +
+                    "2. What is my account balance?<br>" +
+                    "3. Show recent transactions<br>" +
+                    "4. Show loan details<br>" +
+                    "5. Show EMI details<br>" +
+                    "6. Show card details<br>" +
+                    "7. How to transfer funds?<br>" +
+                    "8. Show branch and IFSC<br>" +
+                    "9. Show KYC details<br>" +
+                    "10. Show offers<br>" +
+                    "11. Contact customer care" +
+                    "</div>";
+            }
+
+            else if (
+                message.includes("bye") ||
+                message.includes("thank")
+            ) {
+                response =
+                    "Thank you for using Dhone Bank Assistant.<br>" +
+                    "Have a safe and secure banking experience!";
+            }
+
+            else {
+                response =
+                    "Sorry, I could not understand your query clearly.<br>" +
+                    "Try asking about <b>balance, profile, transactions, loan, EMI, card, branch, IFSC, KYC, offers or customer care</b>.";
+            }
+
+            addBotMessage(response);
+        }
+
+        userInput.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+
+</body>
+
+</html>
