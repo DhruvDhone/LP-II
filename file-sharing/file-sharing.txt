@@ -1,0 +1,192 @@
+Secure File Sharing Between Two AWS EC2 Instances
+
+Your instance details:
+
+Sender public IP: 18.207.93.0
+Sender private IP: 172.31.22.32
+
+Receiver public IP: 184.73.191.101
+Receiver private IP: 172.31.19.236
+
+Key files in Downloads:
+sender.pem
+reciever.pem
+
+
+Step 1: Open terminal on your Mac
+
+cd ~/Downloads
+ls
+
+
+Step 2: Set permission for both key files
+
+chmod 400 sender.pem
+chmod 400 reciever.pem
+
+
+Step 3: Connect to sender instance
+
+ssh -i ~/Downloads/sender.pem ubuntu@18.207.93.0
+
+
+Step 4: Create a folder and file on sender instance
+
+mkdir secure-sharing
+cd secure-sharing
+echo "This file is securely transferred from sender EC2 to receiver EC2." > file.txt
+cat file.txt
+
+
+Step 5: Open a new terminal on your Mac
+
+cd ~/Downloads
+
+
+Step 6: Copy receiver key to sender instance temporarily
+
+scp -i ~/Downloads/sender.pem ~/Downloads/reciever.pem ubuntu@18.207.93.0:/home/ubuntu/
+
+
+Step 7: Go back to sender instance terminal
+
+cd ~/secure-sharing
+mv /home/ubuntu/reciever.pem .
+chmod 400 reciever.pem
+ls -l
+
+
+Step 8: Transfer file from sender instance to receiver instance using receiver private IP
+
+scp -i reciever.pem file.txt ubuntu@172.31.19.236:/home/ubuntu/
+
+
+Step 9: Open another terminal on your Mac and connect to receiver instance
+
+ssh -i ~/Downloads/reciever.pem ubuntu@184.73.191.101
+
+
+Step 10: Check file on receiver instance
+
+ls
+cat file.txt
+
+
+Step 11: Check file permission on receiver instance
+
+ls -l file.txt
+
+
+Step 12: Change file permission so only owner can read and write
+
+chmod 600 file.txt
+ls -l file.txt
+
+
+Step 13: Create a secure folder on receiver instance
+
+mkdir received_files
+chmod 700 received_files
+ls -ld received_files
+
+
+Step 14: Go back to sender instance terminal
+
+cd ~/secure-sharing
+
+
+Step 15: Transfer file again into secure folder of receiver instance
+
+scp -i reciever.pem file.txt ubuntu@172.31.19.236:/home/ubuntu/received_files/
+
+
+Step 16: Go back to receiver instance terminal
+
+cd ~/received_files
+ls
+cat file.txt
+
+
+Step 17: Remove receiver key from sender instance for security
+
+Go back to sender instance terminal and run:
+
+cd ~/secure-sharing
+rm reciever.pem
+ls
+
+
+Step 18: Exit from sender and receiver terminals
+
+exit
+
+exit
+
+
+Security group setting if SCP does not work:
+
+Go to AWS Console
+
+EC2
+Security Groups
+Select the security group used by both instances
+Inbound rules
+Edit inbound rules
+Add rule
+
+Type: SSH
+Protocol: TCP
+Port: 22
+Source: same security group ID
+
+Also keep this rule:
+
+Type: SSH
+Protocol: TCP
+Port: 22
+Source: My IP
+
+
+Final command list only:
+
+cd ~/Downloads
+chmod 400 sender.pem
+chmod 400 reciever.pem
+
+ssh -i ~/Downloads/sender.pem ubuntu@18.207.93.0
+
+mkdir secure-sharing
+cd secure-sharing
+echo "This file is securely transferred from sender EC2 to receiver EC2." > file.txt
+cat file.txt
+
+scp -i ~/Downloads/sender.pem ~/Downloads/reciever.pem ubuntu@18.207.93.0:/home/ubuntu/
+
+cd ~/secure-sharing
+mv /home/ubuntu/reciever.pem .
+chmod 400 reciever.pem
+ls -l
+
+scp -i reciever.pem file.txt ubuntu@172.31.19.236:/home/ubuntu/
+
+ssh -i ~/Downloads/reciever.pem ubuntu@184.73.191.101
+
+ls
+cat file.txt
+ls -l file.txt
+chmod 600 file.txt
+ls -l file.txt
+
+mkdir received_files
+chmod 700 received_files
+ls -ld received_files
+
+scp -i reciever.pem file.txt ubuntu@172.31.19.236:/home/ubuntu/received_files/
+
+cd ~/received_files
+ls
+cat file.txt
+
+cd ~/secure-sharing
+rm reciever.pem
+ls
