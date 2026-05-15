@@ -1,0 +1,102 @@
+<apex:page controller="EmailNotificationController" showHeader="true" sidebar="false">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+        }
+
+        .container {
+            width: 600px;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+        }
+
+        .title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1b4f72;
+            margin-bottom: 20px;
+        }
+
+        .label {
+            font-weight: bold;
+            margin-top: 12px;
+            display: block;
+        }
+
+        .inputBox {
+            width: 100%;
+            padding: 9px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .textArea {
+            width: 100%;
+            height: 120px;
+            padding: 9px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background: #0070d2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #005fb2;
+        }
+
+        .msg {
+            margin-bottom: 15px;
+        }
+    </style>
+
+    <apex:form enctype="multipart/form-data">
+
+        <div class="container">
+
+            <div class="title">Send Email Notification</div>
+
+            <div class="msg">
+                <apex:pageMessages />
+            </div>
+
+            <label class="label">Recipient Email</label>
+            <apex:inputText value="{!recipientEmail}" styleClass="inputBox"/>
+
+            <label class="label">Subject</label>
+            <apex:inputText value="{!subjectText}" styleClass="inputBox"/>
+
+            <label class="label">Message Body</label>
+            <apex:inputTextarea value="{!messageBody}" styleClass="textArea"/>
+
+            <label class="label">Attachment Optional</label>
+            <apex:inputFile value="{!attachmentBody}" filename="{!attachmentName}" styleClass="inputBox"/>
+
+            <apex:commandButton value="Send Email"
+                                action="{!sendEmail}"
+                                styleClass="btn"/>
+
+        </div>
+
+    </apex:form>
+
+</apex:page>

@@ -1,0 +1,103 @@
+public with sharing class EmailNotificationController {
+
+    public String recipientEmail { get; set; }
+    public String subjectText { get; set; }
+    public String messageBody { get; set; }
+    public Blob attachmentBody { get; set; }
+    public String attachmentName { get; set; }
+
+    public EmailNotificationController() {
+        recipientEmail = '';
+        subjectText = '';
+        messageBody = '';
+    }
+
+    public PageReference sendEmail() {
+
+        if (String.isBlank(recipientEmail)) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Please enter recipient email address.'
+            ));
+            return null;
+        }
+
+        if (!isValidEmail(recipientEmail)) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Invalid email id. Please enter a valid email address.'
+            ));
+            return null;
+        }
+
+        if (String.isBlank(subjectText)) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Please enter email subject.'
+            ));
+            return null;
+        }
+
+        if (String.isBlank(messageBody)) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Please enter message body.'
+            ));
+            return null;
+        }
+
+        try {
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+
+            mail.setToAddresses(new String[] { recipientEmail });
+            mail.setSubject(subjectText);
+            mail.setPlainTextBody(messageBody);
+
+            if (attachmentBody != null && !String.isBlank(attachmentName)) {
+                Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
+                attachment.setFileName(attachmentName);
+                attachment.setBody(attachmentBody);
+
+                mail.setFileAttachments(new Messaging.EmailFileAttachment[] { attachment });
+            }
+
+            Messaging.SendEmailResult[] results = Messaging.sendEmail(
+                new Messaging.SingleEmailMessage[] { mail }
+            );
+
+            if (results[0].isSuccess()) {
+                ApexPages.addMessage(new ApexPages.Message(
+                    ApexPages.Severity.CONFIRM,
+                    'Email sent successfully.'
+                ));
+
+                recipientEmail = '';
+                subjectText = '';
+                messageBody = '';
+                attachmentBody = null;
+                attachmentName = '';
+            } else {
+                ApexPages.addMessage(new ApexPages.Message(
+                    ApexPages.Severity.ERROR,
+                    'Email could not be sent: ' + results[0].getErrors()[0].getMessage()
+                ));
+            }
+
+        } catch (Exception e) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Error while sending email: ' + e.getMessage()
+            ));
+        }
+
+        return null;
+    }
+
+    private Boolean isValidEmail(String email) {
+        Pattern emailPattern = Pattern.compile(
+            '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'
+        );
+        Matcher emailMatcher = emailPattern.matcher(email);
+        return emailMatcher.matches();
+    }
+}
