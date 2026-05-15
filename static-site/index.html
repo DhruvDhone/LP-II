@@ -36,3 +36,214 @@
   <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+1. Open AWS Console.
+
+2. Go to:
+   EC2 → Instances → Launch Instance
+
+3. Enter instance name:
+   static-website-server
+
+4. Choose AMI:
+   Ubuntu Server 22.04 LTS
+   or
+   Ubuntu Server 24.04 LTS
+
+5. Choose instance type:
+   t3.micro
+
+6. Create or select key pair:
+   static-website.pem
+
+7. In Network settings:
+   - Enable Auto-assign Public IP
+   - Create security group with these inbound rules:
+
+   SSH   | Port 22  | Source: My IP
+   HTTP  | Port 80  | Source: Anywhere IPv4
+   HTTPS | Port 443 | Source: Anywhere IPv4   (optional)
+
+8. Click:
+   Launch Instance
+
+9. Wait until:
+   Instance state = Running
+   Status checks = 2/2 checks passed
+
+10. Copy the Public IPv4 address:
+   52.90.101.246
+
+11. On the Ubuntu PC in the practical exam, open Terminal.
+
+12. Go to Downloads folder:
+
+   cd ~/Downloads
+
+13. Give permission to the key file:
+
+   chmod 400 static-website.pem
+
+14. Connect to the EC2 instance:
+
+   ssh -i ~/Downloads/static-website.pem ubuntu@52.90.101.246
+
+15. If asked:
+   Are you sure you want to continue connecting (yes/no/[fingerprint])?
+
+   Type:
+   yes
+
+16. After login, install Nginx:
+
+   sudo apt update
+   sudo apt install nginx -y
+   sudo systemctl start nginx
+   sudo systemctl enable nginx
+
+17. Check Nginx status:
+
+   sudo systemctl status nginx
+
+18. Test Nginx locally on the server:
+
+   curl http://localhost
+
+19. Open browser and check:
+
+   http://52.90.101.246
+
+20. On the Ubuntu PC, create a folder for website files:
+
+   mkdir -p ~/static-website
+   cd ~/static-website
+
+21. Create the website files:
+
+   touch index.html style.css script.js
+
+22. Open and edit the files using nano:
+
+   nano index.html
+   nano style.css
+   nano script.js
+
+23. Paste your code into each file and save:
+   - Press Ctrl + O, then Enter to save
+   - Press Ctrl + X to exit
+
+24. After creating the files, upload them to EC2:
+
+   scp -i ~/Downloads/static-website.pem ~/static-website/index.html ~/static-website/style.css ~/static-website/script.js ubuntu@52.90.101.246:/home/ubuntu/
+
+25. SSH into the instance again:
+
+   ssh -i ~/Downloads/static-website.pem ubuntu@52.90.101.246
+
+26. Remove default Nginx page:
+
+   sudo rm /var/www/html/index.nginx-debian.html
+
+27. Copy website files to Nginx web root:
+
+   sudo cp /home/ubuntu/index.html /var/www/html/
+   sudo cp /home/ubuntu/style.css /var/www/html/
+   sudo cp /home/ubuntu/script.js /var/www/html/
+
+28. Reload Nginx:
+
+   sudo systemctl reload nginx
+
+29. Open browser and visit:
+
+   http://52.90.101.246
+
+30. Your website should now appear.
+
+31. To update the website later from the Ubuntu PC, run:
+
+   cd ~/static-website
+   scp -i ~/Downloads/static-website.pem index.html style.css script.js ubuntu@52.90.101.246:/home/ubuntu/
+   ssh -i ~/Downloads/static-website.pem ubuntu@52.90.101.246 "sudo cp /home/ubuntu/index.html /var/www/html/ && sudo cp /home/ubuntu/style.css /var/www/html/ && sudo cp /home/ubuntu/script.js /var/www/html/ && sudo systemctl reload nginx"
+
+32. Refresh the browser after updating.
+
+33. To verify files on EC2, run:
+
+   ls /var/www/html
+   cat /var/www/html/index.html
+   sudo systemctl status nginx
+
+34. Important:
+   - Keep the instance running.
+   - Keep the same key file: static-website.pem
+   - Do not terminate the instance.
+   - Since you are keeping the instance on, the same public IP 52.90.101.246 should remain available during your practical.
+-->
