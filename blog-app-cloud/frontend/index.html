@@ -10,3 +10,1116 @@
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+ONLINE BLOG APPLICATION DEPLOYMENT ON AWS EC2
+METHOD 1: DEPLOY DIRECTLY FROM GITHUB REPOSITORY
+
+Project:
+Online Blog Application
+
+Technology Used:
+Frontend: React + Vite
+Backend: Node.js + Express
+Database: MongoDB using Docker
+Server: AWS EC2 Ubuntu
+Web Server: Nginx
+Process Manager: PM2
+
+==================================================
+STEP 1: CREATE AWS EC2 INSTANCE
+==================================================
+
+1. Open AWS Console.
+2. Go to EC2.
+3. Click Launch Instance.
+
+Use these settings:
+
+Name: blog-app-server
+AMI: Ubuntu Server 22.04 LTS
+Instance type: t3.micro
+Key pair: Create new key pair
+Key pair name: blog-practical-key
+Key type: RSA
+File format: .pem
+
+Download the key file:
+
+blog-practical-key.pem
+
+==================================================
+STEP 2: CONFIGURE SECURITY GROUP
+==================================================
+
+Add the following inbound rules:
+
+Type          Port      Source
+SSH           22        My IP
+HTTP          80        Anywhere IPv4
+HTTPS         443       Anywhere IPv4
+Custom TCP    5000      Anywhere IPv4
+Custom TCP    5173      Anywhere IPv4
+
+Explanation:
+
+22   = SSH connection
+80   = Final website using Nginx
+443  = HTTPS
+5000 = Backend API
+5173 = React Vite testing
+
+==================================================
+STEP 3: CONNECT TO EC2 INSTANCE FROM MAC
+==================================================
+
+Open terminal on Mac.
+
+Run:
+
+cd ~/Downloads
+
+chmod 400 blog-practical-key.pem
+
+ssh -i blog-practical-key.pem ubuntu@YOUR_PUBLIC_IP
+
+Example:
+
+ssh -i blog-practical-key.pem ubuntu@54.227.182.135
+
+If it asks:
+
+Are you sure you want to continue connecting?
+
+Type:
+
+yes
+
+==================================================
+STEP 4: UPDATE UBUNTU SERVER
+==================================================
+
+Run these commands on EC2:
+
+sudo apt update
+
+sudo apt upgrade -y
+
+==================================================
+STEP 5: INSTALL REQUIRED SOFTWARE
+==================================================
+
+Install Git, Nginx, and Docker:
+
+sudo apt install git nginx docker.io -y
+
+Install Node.js 20:
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+
+sudo apt install nodejs -y
+
+Check versions:
+
+node -v
+
+npm -v
+
+git --version
+
+docker --version
+
+nginx -v
+
+==================================================
+STEP 6: START DOCKER
+==================================================
+
+Run:
+
+sudo systemctl start docker
+
+sudo systemctl enable docker
+
+sudo usermod -aG docker ubuntu
+
+newgrp docker
+
+Check Docker:
+
+docker ps
+
+==================================================
+STEP 7: DOWNLOAD PROJECT FROM GITHUB
+==================================================
+
+Go to home directory:
+
+cd ~
+
+Clone your GitHub repository:
+
+git clone https://github.com/YOUR_USERNAME/blog-app-cloud.git
+
+Example:
+
+git clone https://github.com/DhruvDhone/blog-app-cloud.git
+
+Go inside project folder:
+
+cd blog-app-cloud
+
+Check files:
+
+ls
+
+Expected files:
+
+backend
+frontend
+docker-compose.yml
+
+==================================================
+STEP 8: UPDATE PUBLIC IP IN FRONTEND
+==================================================
+
+Open App.jsx:
+
+nano frontend/src/App.jsx
+
+Find this line:
+
+const API = "http://OLD_PUBLIC_IP:5000/api/posts";
+
+Replace it with your new EC2 public IP:
+
+const API = "http://YOUR_PUBLIC_IP:5000/api/posts";
+
+Example:
+
+const API = "http://54.227.182.135:5000/api/posts";
+
+Save file:
+
+CTRL + O
+Enter
+CTRL + X
+
+==================================================
+STEP 9: START MONGODB DATABASE USING DOCKER
+==================================================
+
+Make sure you are inside project folder:
+
+cd ~/blog-app-cloud
+
+Start MongoDB:
+
+docker compose up -d
+
+Check container:
+
+docker ps
+
+Expected container name:
+
+blog-mongodb
+
+==================================================
+STEP 10: RUN BACKEND SERVER
+==================================================
+
+Go to backend folder:
+
+cd ~/blog-app-cloud/backend
+
+Install backend dependencies:
+
+npm install
+
+Start backend:
+
+npm start
+
+Expected output:
+
+MongoDB connected successfully
+Server running on port 5000
+
+Test backend in browser:
+
+http://YOUR_PUBLIC_IP:5000
+
+Example:
+
+http://54.227.182.135:5000
+
+Expected output:
+
+Blog backend is running successfully
+
+Keep this terminal open.
+
+==================================================
+STEP 11: OPEN SECOND TERMINAL FOR FRONTEND TESTING
+==================================================
+
+Open a new Mac terminal.
+
+Run:
+
+cd ~/Downloads
+
+ssh -i blog-practical-key.pem ubuntu@YOUR_PUBLIC_IP
+
+Example:
+
+ssh -i blog-practical-key.pem ubuntu@54.227.182.135
+
+Go to frontend folder:
+
+cd ~/blog-app-cloud/frontend
+
+Install frontend dependencies:
+
+npm install
+
+Run React frontend:
+
+npm run dev
+
+Open in browser:
+
+http://YOUR_PUBLIC_IP:5173
+
+Example:
+
+http://54.227.182.135:5173
+
+Now test:
+
+Create blog post
+View blog post
+Delete blog post
+
+==================================================
+STEP 12: FINAL DEPLOYMENT USING NGINX
+==================================================
+
+Stop frontend server:
+
+CTRL + C
+
+Build frontend:
+
+cd ~/blog-app-cloud/frontend
+
+npm run build
+
+Remove old Nginx default page:
+
+sudo rm -rf /var/www/html/*
+
+Copy React build files to Nginx:
+
+sudo cp -r dist/* /var/www/html/
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+
+sudo systemctl enable nginx
+
+Open final website:
+
+http://YOUR_PUBLIC_IP
+
+Example:
+
+http://54.227.182.135
+
+==================================================
+STEP 13: KEEP BACKEND RUNNING PERMANENTLY USING PM2
+==================================================
+
+Go to backend terminal.
+
+Stop backend:
+
+CTRL + C
+
+Install PM2:
+
+sudo npm install -g pm2
+
+Go to backend folder:
+
+cd ~/blog-app-cloud/backend
+
+Start backend using PM2:
+
+pm2 start server.js --name blog-backend
+
+Save PM2 process:
+
+pm2 save
+
+Check PM2 status:
+
+pm2 list
+
+Expected output:
+
+blog-backend    online
+
+==================================================
+STEP 14: FINAL TESTING URLS
+==================================================
+
+Backend:
+
+http://YOUR_PUBLIC_IP:5000
+
+Backend API:
+
+http://YOUR_PUBLIC_IP:5000/api/posts
+
+Frontend final website:
+
+http://YOUR_PUBLIC_IP
+
+==================================================
+STEP 15: USEFUL CHECKING COMMANDS
+==================================================
+
+Check project files:
+
+cd ~/blog-app-cloud
+ls
+
+Check backend files:
+
+ls ~/blog-app-cloud/backend
+
+Check frontend files:
+
+ls ~/blog-app-cloud/frontend
+
+Check MongoDB container:
+
+docker ps
+
+Check backend process:
+
+pm2 list
+
+Check backend logs:
+
+pm2 logs blog-backend
+
+Check Nginx:
+
+sudo systemctl status nginx
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+
+Restart backend:
+
+pm2 restart blog-backend
+
+==================================================
+STEP 16: TROUBLESHOOTING
+==================================================
+
+If website opens but posts do not appear:
+
+pm2 list
+
+pm2 restart blog-backend
+
+Check backend:
+
+http://YOUR_PUBLIC_IP:5000
+
+Check API:
+
+http://YOUR_PUBLIC_IP:5000/api/posts
+
+Also make sure port 5000 is open in AWS security group.
+
+If frontend uses old IP:
+
+nano ~/blog-app-cloud/frontend/src/App.jsx
+
+Update:
+
+const API = "http://YOUR_PUBLIC_IP:5000/api/posts";
+
+Then rebuild:
+
+cd ~/blog-app-cloud/frontend
+
+npm run build
+
+sudo rm -rf /var/www/html/*
+
+sudo cp -r dist/* /var/www/html/
+
+sudo systemctl restart nginx
+
+If MongoDB is not running:
+
+docker ps
+
+If missing:
+
+cd ~/blog-app-cloud
+
+docker compose up -d
+
+Check logs:
+
+docker logs blog-mongodb
+
+If Docker permission error comes:
+
+sudo usermod -aG docker ubuntu
+
+newgrp docker
+
+docker ps
+
+==================================================
+FINAL RESULT
+==================================================
+
+The full-stack online blog application was successfully deployed on AWS EC2.
+The React frontend was served using Nginx.
+The Node.js Express backend was executed using PM2.
+MongoDB was deployed using Docker.
+Users can create, view, and delete blog posts through the web interface.
+-->
+
+
+<!-- 
+ONLINE BLOG APPLICATION DEPLOYMENT ON AWS EC2
+METHOD 2: DEPLOY PROJECT ALREADY DOWNLOADED IN MAC DOWNLOADS FOLDER
+
+Project:
+Online Blog Application
+
+Technology Used:
+Frontend: React + Vite
+Backend: Node.js + Express
+Database: MongoDB using Docker
+Server: AWS EC2 Ubuntu
+Web Server: Nginx
+Process Manager: PM2
+
+Use this method when the project is already downloaded from GitHub on your Mac.
+
+Example project folder:
+
+~/Downloads/blog-app-cloud
+
+or
+
+~/Downloads/blog-app-cloud-main
+
+==================================================
+STEP 1: CREATE AWS EC2 INSTANCE
+==================================================
+
+1. Open AWS Console.
+2. Go to EC2.
+3. Click Launch Instance.
+
+Use these settings:
+
+Name: blog-app-server
+AMI: Ubuntu Server 22.04 LTS
+Instance type: t3.micro
+Key pair: Create new key pair
+Key pair name: blog-practical-key
+Key type: RSA
+File format: .pem
+
+Download the key file:
+
+blog-practical-key.pem
+
+==================================================
+STEP 2: CONFIGURE SECURITY GROUP
+==================================================
+
+Add the following inbound rules:
+
+Type          Port      Source
+SSH           22        My IP
+HTTP          80        Anywhere IPv4
+HTTPS         443       Anywhere IPv4
+Custom TCP    5000      Anywhere IPv4
+Custom TCP    5173      Anywhere IPv4
+
+Explanation:
+
+22   = SSH connection
+80   = Final website using Nginx
+443  = HTTPS
+5000 = Backend API
+5173 = React Vite testing
+
+==================================================
+STEP 3: CONNECT TO EC2 INSTANCE FROM MAC
+==================================================
+
+Open terminal on Mac.
+
+Run:
+
+cd ~/Downloads
+
+chmod 400 blog-practical-key.pem
+
+ssh -i blog-practical-key.pem ubuntu@YOUR_PUBLIC_IP
+
+Example:
+
+ssh -i blog-practical-key.pem ubuntu@54.227.182.135
+
+If it asks:
+
+Are you sure you want to continue connecting?
+
+Type:
+
+yes
+
+==================================================
+STEP 4: UPDATE UBUNTU SERVER
+==================================================
+
+Run these commands on EC2:
+
+sudo apt update
+
+sudo apt upgrade -y
+
+==================================================
+STEP 5: INSTALL REQUIRED SOFTWARE ON EC2
+==================================================
+
+Install Git, Nginx, and Docker:
+
+sudo apt install git nginx docker.io -y
+
+Install Node.js 20:
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+
+sudo apt install nodejs -y
+
+Check versions:
+
+node -v
+
+npm -v
+
+git --version
+
+docker --version
+
+nginx -v
+
+==================================================
+STEP 6: START DOCKER
+==================================================
+
+Run:
+
+sudo systemctl start docker
+
+sudo systemctl enable docker
+
+sudo usermod -aG docker ubuntu
+
+newgrp docker
+
+Check Docker:
+
+docker ps
+
+==================================================
+STEP 7: UPLOAD PROJECT FOLDER FROM MAC TO EC2
+==================================================
+
+Open a NEW terminal on Mac.
+
+Go to Downloads:
+
+cd ~/Downloads
+
+Check files:
+
+ls
+
+If your project folder name is:
+
+blog-app-cloud
+
+Then upload using:
+
+scp -i blog-practical-key.pem -r blog-app-cloud ubuntu@YOUR_PUBLIC_IP:/home/ubuntu/
+
+Example:
+
+scp -i blog-practical-key.pem -r blog-app-cloud ubuntu@54.227.182.135:/home/ubuntu/
+
+If your folder name is:
+
+blog-app-cloud-main
+
+Then upload using:
+
+scp -i blog-practical-key.pem -r blog-app-cloud-main ubuntu@YOUR_PUBLIC_IP:/home/ubuntu/
+
+Example:
+
+scp -i blog-practical-key.pem -r blog-app-cloud-main ubuntu@54.227.182.135:/home/ubuntu/
+
+==================================================
+STEP 8: CONNECT AGAIN TO EC2
+==================================================
+
+From Mac terminal:
+
+ssh -i blog-practical-key.pem ubuntu@YOUR_PUBLIC_IP
+
+Example:
+
+ssh -i blog-practical-key.pem ubuntu@54.227.182.135
+
+If your folder is blog-app-cloud-main, rename it:
+
+mv ~/blog-app-cloud-main ~/blog-app-cloud
+
+Go inside project folder:
+
+cd ~/blog-app-cloud
+
+Check files:
+
+ls
+
+Expected files:
+
+backend
+frontend
+docker-compose.yml
+
+==================================================
+STEP 9: UPDATE PUBLIC IP IN FRONTEND
+==================================================
+
+Open App.jsx:
+
+nano frontend/src/App.jsx
+
+Find this line:
+
+const API = "http://OLD_PUBLIC_IP:5000/api/posts";
+
+Replace it with your new EC2 public IP:
+
+const API = "http://YOUR_PUBLIC_IP:5000/api/posts";
+
+Example:
+
+const API = "http://54.227.182.135:5000/api/posts";
+
+Save file:
+
+CTRL + O
+Enter
+CTRL + X
+
+==================================================
+STEP 10: START MONGODB DATABASE USING DOCKER
+==================================================
+
+Make sure you are inside project folder:
+
+cd ~/blog-app-cloud
+
+Start MongoDB:
+
+docker compose up -d
+
+Check container:
+
+docker ps
+
+Expected container name:
+
+blog-mongodb
+
+==================================================
+STEP 11: RUN BACKEND SERVER
+==================================================
+
+Go to backend folder:
+
+cd ~/blog-app-cloud/backend
+
+Install backend dependencies:
+
+npm install
+
+Start backend:
+
+npm start
+
+Expected output:
+
+MongoDB connected successfully
+Server running on port 5000
+
+Test backend in browser:
+
+http://YOUR_PUBLIC_IP:5000
+
+Example:
+
+http://54.227.182.135:5000
+
+Expected output:
+
+Blog backend is running successfully
+
+Keep this terminal open.
+
+==================================================
+STEP 12: OPEN SECOND TERMINAL FOR FRONTEND TESTING
+==================================================
+
+Open a new Mac terminal.
+
+Run:
+
+cd ~/Downloads
+
+ssh -i blog-practical-key.pem ubuntu@YOUR_PUBLIC_IP
+
+Example:
+
+ssh -i blog-practical-key.pem ubuntu@54.227.182.135
+
+Go to frontend folder:
+
+cd ~/blog-app-cloud/frontend
+
+Install frontend dependencies:
+
+npm install
+
+Run React frontend:
+
+npm run dev
+
+Open in browser:
+
+http://YOUR_PUBLIC_IP:5173
+
+Example:
+
+http://54.227.182.135:5173
+
+Now test:
+
+Create blog post
+View blog post
+Delete blog post
+
+==================================================
+STEP 13: FINAL DEPLOYMENT USING NGINX
+==================================================
+
+Stop frontend server:
+
+CTRL + C
+
+Build frontend:
+
+cd ~/blog-app-cloud/frontend
+
+npm run build
+
+Remove old Nginx default page:
+
+sudo rm -rf /var/www/html/*
+
+Copy React build files to Nginx:
+
+sudo cp -r dist/* /var/www/html/
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+
+sudo systemctl enable nginx
+
+Open final website:
+
+http://YOUR_PUBLIC_IP
+
+Example:
+
+http://54.227.182.135
+
+==================================================
+STEP 14: KEEP BACKEND RUNNING PERMANENTLY USING PM2
+==================================================
+
+Go to backend terminal.
+
+Stop backend:
+
+CTRL + C
+
+Install PM2:
+
+sudo npm install -g pm2
+
+Go to backend folder:
+
+cd ~/blog-app-cloud/backend
+
+Start backend using PM2:
+
+pm2 start server.js --name blog-backend
+
+Save PM2 process:
+
+pm2 save
+
+Check PM2 status:
+
+pm2 list
+
+Expected output:
+
+blog-backend    online
+
+==================================================
+STEP 15: FINAL TESTING URLS
+==================================================
+
+Backend:
+
+http://YOUR_PUBLIC_IP:5000
+
+Backend API:
+
+http://YOUR_PUBLIC_IP:5000/api/posts
+
+Frontend final website:
+
+http://YOUR_PUBLIC_IP
+
+==================================================
+STEP 16: USEFUL CHECKING COMMANDS
+==================================================
+
+Check project files:
+
+cd ~/blog-app-cloud
+ls
+
+Check backend files:
+
+ls ~/blog-app-cloud/backend
+
+Check frontend files:
+
+ls ~/blog-app-cloud/frontend
+
+Check MongoDB container:
+
+docker ps
+
+Check backend process:
+
+pm2 list
+
+Check backend logs:
+
+pm2 logs blog-backend
+
+Check Nginx:
+
+sudo systemctl status nginx
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+
+Restart backend:
+
+pm2 restart blog-backend
+
+==================================================
+STEP 17: TROUBLESHOOTING
+==================================================
+
+If scp upload fails:
+
+1. Check key permission:
+
+chmod 400 ~/Downloads/blog-practical-key.pem
+
+2. Check correct public IP.
+
+3. Check that SSH port 22 is allowed from My IP.
+
+4. Try SSH first:
+
+ssh -i blog-practical-key.pem ubuntu@YOUR_PUBLIC_IP
+
+If website opens but posts do not appear:
+
+pm2 list
+
+pm2 restart blog-backend
+
+Check backend:
+
+http://YOUR_PUBLIC_IP:5000
+
+Check API:
+
+http://YOUR_PUBLIC_IP:5000/api/posts
+
+Also make sure port 5000 is open in AWS security group.
+
+If frontend uses old IP:
+
+nano ~/blog-app-cloud/frontend/src/App.jsx
+
+Update:
+
+const API = "http://YOUR_PUBLIC_IP:5000/api/posts";
+
+Then rebuild:
+
+cd ~/blog-app-cloud/frontend
+
+npm run build
+
+sudo rm -rf /var/www/html/*
+
+sudo cp -r dist/* /var/www/html/
+
+sudo systemctl restart nginx
+
+If MongoDB is not running:
+
+docker ps
+
+If missing:
+
+cd ~/blog-app-cloud
+
+docker compose up -d
+
+Check logs:
+
+docker logs blog-mongodb
+
+If Docker permission error comes:
+
+sudo usermod -aG docker ubuntu
+
+newgrp docker
+
+docker ps
+
+==================================================
+FINAL RESULT
+==================================================
+
+The full-stack online blog application was successfully deployed on AWS EC2.
+The project was uploaded from the Mac Downloads folder to the Ubuntu EC2 instance.
+The React frontend was served using Nginx.
+The Node.js Express backend was executed using PM2.
+MongoDB was deployed using Docker.
+Users can create, view, and delete blog posts through the web interface.
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
