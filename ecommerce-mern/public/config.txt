@@ -1,25 +1,45 @@
 ECOMMERCE MERN AWS DEPLOYMENT STEPS
 PROJECT ALREADY DOWNLOADED IN DOWNLOADS
 
-Use this on Ubuntu PC during practical exam.
+AWS details:
 
-Before starting, keep ready:
-1. EC2 public IP
-2. .pem key file
-3. Project folder ecommerce-mern already present in Downloads
-4. EC2 instance must be running
-5. EC2 Security Group must allow:
-   SSH  port 22  from My IP or 0.0.0.0/0
-   HTTP port 80  from 0.0.0.0/0
+Instance name: e-commerce
+Public IPv4 address: 54.221.71.99
+Private IPv4 address: 172.31.30.161
+Key pair name: e-commerce
+Key file name: e-commerce.pem
+EC2 username: ubuntu
 
-Example:
-Key file: website-key.pem
-Project folder: ecommerce-mern
-EC2 user: ubuntu
-Public IP: YOUR_EC2_PUBLIC_IP
+Security Group inbound rules already added:
+
+SSH    TCP    22     0.0.0.0/0
+HTTP   TCP    80     0.0.0.0/0
+HTTPS  TCP    443    0.0.0.0/0
+
+For this project, SSH 22 and HTTP 80 are required.
+HTTPS 443 is okay but not used in this project.
 
 
-STEP 1: Open terminal on Ubuntu PC
+STEP 1: Keep files ready on Ubuntu PC
+
+In Downloads folder, keep these two things:
+
+e-commerce.pem
+ecommerce-mern
+
+The project folder should contain:
+
+package.json
+package-lock.json
+server.js
+public
+
+The public folder should contain:
+
+index.html
+
+
+STEP 2: Open terminal on Ubuntu PC
 
 Go to Downloads:
 
@@ -31,16 +51,16 @@ ls
 
 You should see:
 
-website-key.pem
+e-commerce.pem
 ecommerce-mern
 
 
-STEP 2: Give permission to key file
+STEP 3: Give permission to key file
 
-chmod 400 website-key.pem
+chmod 400 e-commerce.pem
 
 
-STEP 3: Check project folder
+STEP 4: Check project folder before upload
 
 cd ~/Downloads/ecommerce-mern
 ls
@@ -61,63 +81,55 @@ You should see:
 index.html
 
 
-STEP 4: Upload project folder to EC2
+STEP 5: Upload project folder to EC2
 
 Go back to Downloads:
 
 cd ~/Downloads
 
-Upload complete project folder:
+Upload the project folder to EC2:
 
-scp -i website-key.pem -r ecommerce-mern ubuntu@YOUR_EC2_PUBLIC_IP:/home/ubuntu/
-
-Example:
-
-scp -i website-key.pem -r ecommerce-mern ubuntu@3.91.30.11:/home/ubuntu/
+scp -i e-commerce.pem -r ecommerce-mern ubuntu@54.221.71.99:/home/ubuntu/
 
 
-STEP 5: Connect to EC2 instance
+STEP 6: Connect to EC2 instance
 
-ssh -i website-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
-
-Example:
-
-ssh -i website-key.pem ubuntu@3.91.30.11
+ssh -i e-commerce.pem ubuntu@54.221.71.99
 
 
-STEP 6: Update Ubuntu packages on EC2
+STEP 7: Update Ubuntu packages on EC2
 
 sudo apt update
 
 
-STEP 7: Install required software
+STEP 8: Install required software
 
 sudo apt install nodejs npm nginx docker.io -y
 
 
-STEP 8: Start Docker
+STEP 9: Start Docker
 
 sudo systemctl enable docker
 sudo systemctl start docker
 sudo usermod -aG docker ubuntu
 
 
-STEP 9: Logout and login again for Docker permission
+STEP 10: Logout and login again for Docker permission
 
 exit
 
 Login again from Ubuntu PC:
 
 cd ~/Downloads
-ssh -i website-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+ssh -i e-commerce.pem ubuntu@54.221.71.99
 
 
-STEP 10: Go to project folder on EC2
+STEP 11: Go to project folder on EC2
 
 cd /home/ubuntu/ecommerce-mern
 
 
-STEP 11: Check project files on EC2
+STEP 12: Check project files on EC2
 
 ls
 
@@ -129,14 +141,14 @@ server.js
 public
 
 
-STEP 12: Start MongoDB using Docker
+STEP 13: Start MongoDB using Docker
 
 docker rm -f ecommerce-mongo 2>/dev/null
 
 docker run -d --name ecommerce-mongo -p 127.0.0.1:27017:27017 -v ecommerce_mongo_data:/data/db mongo:7
 
 
-STEP 13: Check MongoDB container
+STEP 14: Check MongoDB container
 
 docker ps
 
@@ -145,13 +157,13 @@ You should see:
 ecommerce-mongo
 
 
-STEP 14: Install Node dependencies
+STEP 15: Install Node dependencies
 
 cd /home/ubuntu/ecommerce-mern
 npm install
 
 
-STEP 15: Test application manually
+STEP 16: Test application manually
 
 node server.js
 
@@ -166,12 +178,12 @@ Stop server:
 CTRL + C
 
 
-STEP 16: Install PM2
+STEP 17: Install PM2
 
 sudo npm install -g pm2
 
 
-STEP 17: Start app using PM2
+STEP 18: Start app using PM2
 
 pm2 delete ecommerce-app 2>/dev/null
 pm2 start server.js --name ecommerce-app
@@ -179,7 +191,7 @@ pm2 save
 pm2 startup
 
 
-STEP 18: Run PM2 startup command if shown
+STEP 19: Run PM2 startup command if shown
 
 After pm2 startup, it may show one command starting with:
 
@@ -196,7 +208,7 @@ Then run:
 pm2 save
 
 
-STEP 19: Check app status
+STEP 20: Check app status
 
 pm2 status
 
@@ -205,7 +217,7 @@ You should see:
 ecommerce-app online
 
 
-STEP 20: Test backend locally on EC2
+STEP 21: Test backend locally on EC2
 
 curl http://localhost:5000
 
@@ -218,13 +230,13 @@ curl http://localhost:5000/api/products
 You should see product data.
 
 
-STEP 21: Configure Nginx
+STEP 22: Configure Nginx
 
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo rm -f /etc/nginx/sites-available/ecommerce
 
 
-STEP 22: Create Nginx reverse proxy config
+STEP 23: Create Nginx reverse proxy config
 
 sudo tee /etc/nginx/sites-available/ecommerce > /dev/null <<'EOF'
 server {
@@ -245,12 +257,12 @@ server {
 EOF
 
 
-STEP 23: Enable Nginx config
+STEP 24: Enable Nginx config
 
 sudo ln -s /etc/nginx/sites-available/ecommerce /etc/nginx/sites-enabled/ecommerce
 
 
-STEP 24: Test Nginx config
+STEP 25: Test Nginx config
 
 sudo nginx -t
 
@@ -260,12 +272,12 @@ syntax is ok
 test is successful
 
 
-STEP 25: Restart Nginx
+STEP 26: Restart Nginx
 
 sudo systemctl restart nginx
 
 
-STEP 26: Check Nginx status
+STEP 27: Check Nginx status
 
 sudo systemctl status nginx
 
@@ -274,7 +286,7 @@ If it shows active running, press:
 q
 
 
-STEP 27: Allow firewall if active
+STEP 28: Allow firewall if UFW is active
 
 sudo ufw allow 22
 sudo ufw allow 80
@@ -283,22 +295,18 @@ sudo ufw status
 If UFW status is inactive, no problem.
 
 
-STEP 28: Open website in browser
+STEP 29: Open website in browser
 
-http://YOUR_EC2_PUBLIC_IP
-
-Example:
-
-http://3.91.30.11
+http://54.221.71.99
 
 
-STEP 29: Demonstration in practical
+STEP 30: Demonstration in practical
 
 Open website:
 
-http://YOUR_EC2_PUBLIC_IP
+http://54.221.71.99
 
-Show products.
+Show product cards.
 
 Click Add to Cart on two products.
 
@@ -322,16 +330,23 @@ Refresh page.
 
 Products should still load.
 
-Run this command to show products API:
+
+STEP 31: Commands to show backend and database working
+
+Run these on EC2:
 
 curl http://localhost:5000/api/products
 
-Run this command to show orders API:
+This shows products coming from backend and MongoDB.
+
+Run:
 
 curl http://localhost:5000/api/orders
 
+This shows orders stored in MongoDB.
 
-STEP 30: Useful checking commands
+
+STEP 32: Useful checking commands
 
 Check Node app:
 
@@ -368,7 +383,7 @@ Check orders:
 curl http://localhost:5000/api/orders
 
 
-STEP 31: If website shows old Nginx page
+STEP 33: If website shows old Nginx default page
 
 Run:
 
@@ -377,19 +392,17 @@ sudo systemctl restart nginx
 
 Open again:
 
-http://YOUR_EC2_PUBLIC_IP
+http://54.221.71.99
 
 
-STEP 32: If website does not open
+STEP 34: If website does not open
 
-First check AWS Security Group:
+Check AWS Security Group inbound rules:
 
-Inbound rules should be:
+SSH    TCP    22     0.0.0.0/0
+HTTP   TCP    80     0.0.0.0/0
 
-SSH   TCP   22   My IP
-HTTP  TCP   80   0.0.0.0/0
-
-Then run:
+Then run on EC2:
 
 pm2 status
 docker ps
@@ -397,7 +410,7 @@ sudo systemctl status nginx
 curl http://localhost:5000
 
 
-STEP 33: If app is not online
+STEP 35: If app is not online
 
 Run:
 
@@ -411,7 +424,7 @@ pm2 start server.js --name ecommerce-app
 pm2 save
 
 
-STEP 34: If MongoDB is not running
+STEP 36: If MongoDB is not running
 
 Run:
 
@@ -424,32 +437,19 @@ Restart app:
 pm2 restart ecommerce-app
 
 
-STEP 35: If SSH gives permission denied
+STEP 37: If SSH gives permission denied
 
 On Ubuntu PC, run:
 
 cd ~/Downloads
-chmod 400 website-key.pem
+chmod 400 e-commerce.pem
 
 Connect again:
 
-ssh -i website-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+ssh -i e-commerce.pem ubuntu@54.221.71.99
 
 
-STEP 36: If public IP changed
-
-Go to AWS EC2 console.
-
-Open Instances.
-
-Select your running instance.
-
-Copy Public IPv4 address.
-
-Use that IP in SSH and browser.
-
-
-STEP 37: If project upload fails
+STEP 38: If project upload fails
 
 From Ubuntu PC terminal:
 
@@ -458,21 +458,21 @@ ls
 
 Make sure these are present:
 
-website-key.pem
+e-commerce.pem
 ecommerce-mern
 
 Then upload again:
 
-scp -i website-key.pem -r ecommerce-mern ubuntu@YOUR_EC2_PUBLIC_IP:/home/ubuntu/
+scp -i e-commerce.pem -r ecommerce-mern ubuntu@54.221.71.99:/home/ubuntu/
 
 
-STEP 38: If port 5000 is already in use on EC2
+STEP 39: If port 5000 is already in use on EC2
 
 Check process:
 
 sudo lsof -i :5000
 
-Kill old process if needed:
+Kill old process:
 
 sudo kill -9 PID
 
@@ -481,16 +481,16 @@ Then restart app:
 pm2 restart ecommerce-app
 
 
-STEP 39: Final short command set
+STEP 40: Final short command set
 
 Run on Ubuntu PC:
 
 cd ~/Downloads
-chmod 400 website-key.pem
+chmod 400 e-commerce.pem
 
-scp -i website-key.pem -r ecommerce-mern ubuntu@YOUR_EC2_PUBLIC_IP:/home/ubuntu/
+scp -i e-commerce.pem -r ecommerce-mern ubuntu@54.221.71.99:/home/ubuntu/
 
-ssh -i website-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+ssh -i e-commerce.pem ubuntu@54.221.71.99
 
 sudo apt update
 sudo apt install nodejs npm nginx docker.io -y
@@ -501,7 +501,7 @@ sudo usermod -aG docker ubuntu
 exit
 
 cd ~/Downloads
-ssh -i website-key.pem ubuntu@YOUR_EC2_PUBLIC_IP
+ssh -i e-commerce.pem ubuntu@54.221.71.99
 
 cd /home/ubuntu/ecommerce-mern
 
@@ -548,7 +548,7 @@ curl http://localhost:5000/api/products
 
 Open in browser:
 
-http://YOUR_EC2_PUBLIC_IP
+http://54.221.71.99
 
 
 PROJECT EXPLANATION FOR VIVA
@@ -582,4 +582,6 @@ GET /api/orders
 Returns recent customer orders.
 
 Final result:
-The e-commerce website is publicly accessible using the AWS EC2 public IP address.
+The e-commerce website is publicly accessible using the AWS EC2 public IP address:
+
+http://54.221.71.99
