@@ -1,0 +1,751 @@
+EMPLOYEE MANAGEMENT LIGHTNING WEB COMPONENT - COMPLETE STEPS FROM CREATION TO RUNNING
+
+1. Open Salesforce Developer Edition.
+
+2. Click Gear icon on top-right.
+
+3. Click Setup.
+
+4. Open Object Manager.
+
+5. Click Create.
+
+6. Click Custom Object.
+
+7. Create Employee object:
+
+   Label: Employee
+   Plural Label: Employees
+   Object Name: Employee
+   Record Name: Employee Name
+   Data Type: Text
+
+8. Tick these options if visible:
+
+   Allow Reports
+   Allow Search
+   Launch New Custom Tab Wizard after saving this custom object
+
+9. Click Save.
+
+10. If Custom Tab Wizard opens:
+
+   Tab Style: Select any style
+   Click Next
+   Click Next
+   Click Save
+
+11. If tab wizard does not open:
+
+   Go to Setup
+   Search Tabs
+   Open Tabs
+   Under Custom Object Tabs, click New
+   Object: Employee
+   Tab Style: Select any style
+   Click Next
+   Click Next
+   Click Save
+
+12. Now create fields for Employee object.
+
+13. Go to Setup.
+
+14. Open Object Manager.
+
+15. Open Employee object.
+
+16. Click Fields & Relationships.
+
+17. Click New.
+
+18. Create Employee ID field:
+
+   Data Type: Number
+   Field Label: Employee ID
+   Length: 10
+   Decimal Places: 0
+   Field Name: Employee_ID
+
+   Tick Unique if available.
+
+   Click Next
+   Click Next
+   Click Save & New
+
+19. Create Salary field:
+
+   Data Type: Currency
+   Field Label: Salary
+   Length: 10
+   Decimal Places: 2
+   Field Name: Salary
+
+   Click Next
+   Click Next
+   Click Save & New
+
+20. Create Email field:
+
+   Data Type: Email
+   Field Label: Email
+   Field Name: Email
+
+   Click Next
+   Click Next
+   Click Save & New
+
+21. Create Department field:
+
+   Data Type: Picklist
+   Field Label: Department
+   Field Name: Department
+
+   Enter values, each on a new line:
+
+   HR
+   IT
+   Finance
+   Sales
+   Marketing
+
+   Click Next
+   Click Next
+   Click Save & New
+
+22. Create Joining Date field:
+
+   Data Type: Date
+   Field Label: Joining Date
+   Field Name: Joining_Date
+
+   Click Next
+   Click Next
+   Click Save
+
+23. Now create validation rules for Employee object.
+
+24. In Object Manager, open Employee object.
+
+25. Click Validation Rules.
+
+26. Click New.
+
+27. Create validation rule for Employee Name:
+
+   Rule Name:
+   Employee_Name_Validation
+
+   Error Condition Formula:
+
+   LEN(Name) < 3
+
+   Error Message:
+   Employee Name cannot be empty and must contain at least 3 characters.
+
+   Error Location:
+   Top of Page
+
+   Click Save
+
+28. Click New again.
+
+29. Create validation rule for Employee ID:
+
+   Rule Name:
+   Employee_ID_Positive_Validation
+
+   Error Condition Formula:
+
+   Employee_ID__c <= 0
+
+   Error Message:
+   Employee ID must be greater than 0.
+
+   Error Location:
+   Field
+
+   Field:
+   Employee ID
+
+   Click Save
+
+30. For Employee ID uniqueness:
+
+   Go to Object Manager
+   Open Employee
+   Click Fields & Relationships
+   Open Employee ID field
+   Click Edit
+   Tick Unique
+   Click Save
+
+31. Click New again under Validation Rules.
+
+32. Create validation rule for Salary:
+
+   Rule Name:
+   Employee_Salary_Validation
+
+   Error Condition Formula:
+
+   OR(Salary__c <= 10000, Salary__c >= 500000)
+
+   Error Message:
+   Salary must be greater than 10,000 and less than 500,000.
+
+   Error Location:
+   Field
+
+   Field:
+   Salary
+
+   Click Save
+
+33. Email validation is handled automatically because Email field type is used.
+
+34. Department validation is handled using Picklist field.
+
+35. Click New again.
+
+36. Create validation rule for Joining Date:
+
+   Rule Name:
+   Employee_JoiningDate_Validation
+
+   Error Condition Formula:
+
+   Joining_Date__c > TODAY()
+
+   Error Message:
+   Joining Date cannot be a future date.
+
+   Error Location:
+   Field
+
+   Field:
+   Joining Date
+
+   Click Save
+
+37. Now create Lightning Web Component.
+
+38. Open VS Code.
+
+39. Open your Salesforce project folder.
+
+40. Open terminal in VS Code.
+
+41. Run this command:
+
+   sf force:lightning:component:create --type lwc --componentname employeeManagement --outputdir force-app/main/default/lwc
+
+42. Open this folder:
+
+   force-app/main/default/lwc/employeeManagement
+
+43. Replace employeeManagement.html with this code:
+
+<template>
+    <lightning-card title="Employee Management System" icon-name="standard:employee">
+        <div class="slds-p-around_medium">
+
+            <lightning-input
+                label="Employee Name"
+                value={employeeName}
+                onchange={handleNameChange}>
+            </lightning-input>
+
+            <lightning-input
+                type="number"
+                label="Employee ID"
+                value={employeeId}
+                onchange={handleIdChange}>
+            </lightning-input>
+
+            <lightning-input
+                type="number"
+                label="Salary"
+                value={salary}
+                onchange={handleSalaryChange}>
+            </lightning-input>
+
+            <lightning-input
+                type="email"
+                label="Email"
+                value={email}
+                onchange={handleEmailChange}>
+            </lightning-input>
+
+            <lightning-combobox
+                label="Department"
+                value={department}
+                placeholder="Select Department"
+                options={departmentOptions}
+                onchange={handleDepartmentChange}>
+            </lightning-combobox>
+
+            <lightning-input
+                type="date"
+                label="Joining Date"
+                value={joiningDate}
+                onchange={handleDateChange}>
+            </lightning-input>
+
+            <br/>
+
+            <lightning-button
+                variant="brand"
+                label="Save Employee"
+                onclick={saveEmployee}>
+            </lightning-button>
+
+            <lightning-button
+                variant="neutral"
+                label="Clear"
+                onclick={clearForm}
+                class="slds-m-left_small">
+            </lightning-button>
+
+            <template if:true={errorMessage}>
+                <div class="slds-text-color_error slds-m-top_medium">
+                    {errorMessage}
+                </div>
+            </template>
+
+            <template if:true={successMessage}>
+                <div class="slds-text-color_success slds-m-top_medium">
+                    {successMessage}
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>
+
+44. Replace employeeManagement.js with this code:
+
+import { LightningElement } from 'lwc';
+import { createRecord } from 'lightning/uiRecordApi';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
+import EMPLOYEE_OBJECT from '@salesforce/schema/Employee__c';
+import NAME_FIELD from '@salesforce/schema/Employee__c.Name';
+import EMPLOYEE_ID_FIELD from '@salesforce/schema/Employee__c.Employee_ID__c';
+import SALARY_FIELD from '@salesforce/schema/Employee__c.Salary__c';
+import EMAIL_FIELD from '@salesforce/schema/Employee__c.Email__c';
+import DEPARTMENT_FIELD from '@salesforce/schema/Employee__c.Department__c';
+import JOINING_DATE_FIELD from '@salesforce/schema/Employee__c.Joining_Date__c';
+
+export default class EmployeeManagement extends LightningElement {
+    employeeName = '';
+    employeeId = '';
+    salary = '';
+    email = '';
+    department = '';
+    joiningDate = '';
+
+    errorMessage = '';
+    successMessage = '';
+
+    departmentOptions = [
+        { label: 'HR', value: 'HR' },
+        { label: 'IT', value: 'IT' },
+        { label: 'Finance', value: 'Finance' },
+        { label: 'Sales', value: 'Sales' },
+        { label: 'Marketing', value: 'Marketing' }
+    ];
+
+    handleNameChange(event) {
+        this.employeeName = event.target.value;
+    }
+
+    handleIdChange(event) {
+        this.employeeId = event.target.value;
+    }
+
+    handleSalaryChange(event) {
+        this.salary = event.target.value;
+    }
+
+    handleEmailChange(event) {
+        this.email = event.target.value;
+    }
+
+    handleDepartmentChange(event) {
+        this.department = event.detail.value;
+    }
+
+    handleDateChange(event) {
+        this.joiningDate = event.target.value;
+    }
+
+    validateForm() {
+        this.errorMessage = '';
+        this.successMessage = '';
+
+        if (!this.employeeName || this.employeeName.trim().length < 3) {
+            this.errorMessage = 'Employee Name cannot be empty and must contain at least 3 characters.';
+            return false;
+        }
+
+        if (!this.employeeId || Number(this.employeeId) <= 0) {
+            this.errorMessage = 'Employee ID must be greater than 0.';
+            return false;
+        }
+
+        if (!this.salary || Number(this.salary) <= 10000 || Number(this.salary) >= 500000) {
+            this.errorMessage = 'Salary must be greater than 10,000 and less than 500,000.';
+            return false;
+        }
+
+        const emailPattern = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+
+        if (!this.email || !emailPattern.test(this.email)) {
+            this.errorMessage = 'Email address must follow a valid email format.';
+            return false;
+        }
+
+        if (!this.department) {
+            this.errorMessage = 'Department must be selected from the available list.';
+            return false;
+        }
+
+        if (!this.joiningDate) {
+            this.errorMessage = 'Joining Date is required.';
+            return false;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const selectedDate = new Date(this.joiningDate);
+
+        if (selectedDate > today) {
+            this.errorMessage = 'Joining Date cannot be a future date.';
+            return false;
+        }
+
+        return true;
+    }
+
+    saveEmployee() {
+        if (!this.validateForm()) {
+            this.showToast('Error', this.errorMessage, 'error');
+            return;
+        }
+
+        const fields = {};
+
+        fields[NAME_FIELD.fieldApiName] = this.employeeName;
+        fields[EMPLOYEE_ID_FIELD.fieldApiName] = this.employeeId;
+        fields[SALARY_FIELD.fieldApiName] = this.salary;
+        fields[EMAIL_FIELD.fieldApiName] = this.email;
+        fields[DEPARTMENT_FIELD.fieldApiName] = this.department;
+        fields[JOINING_DATE_FIELD.fieldApiName] = this.joiningDate;
+
+        const recordInput = {
+            apiName: EMPLOYEE_OBJECT.objectApiName,
+            fields: fields
+        };
+
+        createRecord(recordInput)
+            .then(() => {
+                this.successMessage = 'Employee record created successfully.';
+                this.errorMessage = '';
+                this.showToast('Success', 'Employee record created successfully.', 'success');
+                this.clearForm();
+            })
+            .catch(error => {
+                this.successMessage = '';
+
+                if (error.body && error.body.message) {
+                    this.errorMessage = error.body.message;
+                } else {
+                    this.errorMessage = 'Error while creating employee record.';
+                }
+
+                this.showToast('Error', this.errorMessage, 'error');
+            });
+    }
+
+    clearForm() {
+        this.employeeName = '';
+        this.employeeId = '';
+        this.salary = '';
+        this.email = '';
+        this.department = '';
+        this.joiningDate = '';
+        this.errorMessage = '';
+        this.successMessage = '';
+    }
+
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant
+        });
+
+        this.dispatchEvent(event);
+    }
+}
+
+45. Replace employeeManagement.js-meta.xml with this code:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>60.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightning__RecordPage</target>
+    </targets>
+</LightningComponentBundle>
+
+46. Deploy the LWC to Salesforce.
+
+47. In VS Code terminal, run:
+
+   sf project deploy start --source-dir force-app/main/default/lwc/employeeManagement
+
+48. If old Salesforce CLI is used, run:
+
+   sfdx force:source:deploy -p force-app/main/default/lwc/employeeManagement
+
+49. Now create Lightning App Page to display LWC.
+
+50. Go to Salesforce Setup.
+
+51. Search Lightning App Builder.
+
+52. Open Lightning App Builder.
+
+53. Click New.
+
+54. Select App Page.
+
+55. Click Next.
+
+56. Enter page name:
+
+   Employee Management Page
+
+57. Click Next.
+
+58. Select One Region layout.
+
+59. Click Done.
+
+60. In the left component search box, search:
+
+   employeeManagement
+
+61. Drag employeeManagement component to the center of the page.
+
+62. Click Save.
+
+63. Click Activate.
+
+64. Select Lightning Experience.
+
+65. Click Add page to app.
+
+66. Select your app or create a new app.
+
+67. Select:
+
+   College Management System
+
+   OR
+
+   Create a new Lightning App named Employee Management System
+
+68. Click Save.
+
+69. Click Finish.
+
+70. Now open App Launcher.
+
+71. Search:
+
+   Employee Management Page
+
+   OR
+
+   College Management System
+
+72. Open the page.
+
+73. You will see Employee Management System form.
+
+74. Test with valid employee data:
+
+   Employee Name: Rohit Sharma
+   Employee ID: 101
+   Salary: 50000
+   Email: rohit@gmail.com
+   Department: IT
+   Joining Date: 16/05/2026
+
+75. Click Save Employee.
+
+76. Record will be saved successfully.
+
+77. Now test invalid Employee Name.
+
+   Employee Name: AB
+   Employee ID: 102
+   Salary: 50000
+   Email: ab@gmail.com
+   Department: IT
+   Joining Date: 16/05/2026
+
+78. Click Save Employee.
+
+79. Error will show:
+
+   Employee Name cannot be empty and must contain at least 3 characters.
+
+80. Now test invalid Employee ID.
+
+   Employee Name: Amit Patil
+   Employee ID: 0
+   Salary: 50000
+   Email: amit@gmail.com
+   Department: IT
+   Joining Date: 16/05/2026
+
+81. Click Save Employee.
+
+82. Error will show:
+
+   Employee ID must be greater than 0.
+
+83. Now test invalid Salary.
+
+   Employee Name: Amit Patil
+   Employee ID: 103
+   Salary: 8000
+   Email: amit@gmail.com
+   Department: IT
+   Joining Date: 16/05/2026
+
+84. Click Save Employee.
+
+85. Error will show:
+
+   Salary must be greater than 10,000 and less than 500,000.
+
+86. Now test invalid Email.
+
+   Employee Name: Amit Patil
+   Employee ID: 104
+   Salary: 50000
+   Email: amitgmail.com
+   Department: IT
+   Joining Date: 16/05/2026
+
+87. Click Save Employee.
+
+88. Error will show:
+
+   Email address must follow a valid email format.
+
+89. Now test blank Department.
+
+   Employee Name: Amit Patil
+   Employee ID: 105
+   Salary: 50000
+   Email: amit@gmail.com
+   Department: Do not select
+   Joining Date: 16/05/2026
+
+90. Click Save Employee.
+
+91. Error will show:
+
+   Department must be selected from the available list.
+
+92. Now test future Joining Date.
+
+   Employee Name: Amit Patil
+   Employee ID: 106
+   Salary: 50000
+   Email: amit@gmail.com
+   Department: IT
+   Joining Date: 31/12/2099
+
+93. Click Save Employee.
+
+94. Error will show:
+
+   Joining Date cannot be a future date.
+
+95. Now test duplicate Employee ID.
+
+96. Enter first valid record:
+
+   Employee Name: Suresh Kale
+   Employee ID: 200
+   Salary: 60000
+   Email: suresh@gmail.com
+   Department: Finance
+   Joining Date: 16/05/2026
+
+97. Click Save Employee.
+
+98. Now enter another record with same Employee ID:
+
+   Employee Name: Mahesh Patil
+   Employee ID: 200
+   Salary: 70000
+   Email: mahesh@gmail.com
+   Department: HR
+   Joining Date: 16/05/2026
+
+99. Click Save Employee.
+
+100. Salesforce will show duplicate value error because Employee ID is unique.
+
+101. To see saved employee records:
+
+   Open App Launcher
+   Search Employees
+   Open Employees tab
+   Click list view dropdown beside Recently Viewed
+   Select All
+   Click Refresh
+
+102. Final practical demo flow:
+
+   Open Employee Management Page
+   Enter valid employee record
+   Click Save Employee
+   Show success message
+   Open Employees tab and show saved record
+   Go back to Employee Management Page
+   Enter invalid Employee Name and show error
+   Enter invalid Employee ID and show error
+   Enter invalid Salary and show error
+   Enter invalid Email and show error
+   Keep Department blank and show error
+   Enter future Joining Date and show error
+   Enter duplicate Employee ID and show duplicate error
+
+103. Final explanation:
+
+   This Employee Management Lightning Web Component allows users to add employee records.
+   Employee object stores all employee data.
+   LWC form accepts Employee Name, Employee ID, Salary, Email, Department, and Joining Date.
+   JavaScript validation checks the data before saving.
+   Validation rules are also created on the object to ensure data accuracy.
+   Employee Name must contain at least 3 characters.
+   Employee ID must be greater than 0 and unique.
+   Salary must be greater than 10,000 and less than 500,000.
+   Email must be in valid email format.
+   Department must be selected from the picklist.
+   Joining Date cannot be a future date.
+   If all values are valid, the record is saved using createRecord.
+   If any value is invalid, an error message is shown and the record is not saved.
