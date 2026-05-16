@@ -1,0 +1,672 @@
+COLLEGE MANAGEMENT LIGHTNING APPLICATION - COMPLETE STEPS FROM CREATION TO RUNNING
+
+1. Open Salesforce Developer Edition.
+
+2. Click the Gear icon on the top-right side.
+
+3. Click Setup.
+
+4. In Setup, open Object Manager.
+
+5. Click Create.
+
+6. Click Custom Object.
+
+7. Create Student Object with these details:
+
+   Label: Student
+   Plural Label: Students
+   Object Name: Student
+   Record Name: Student Name
+   Data Type: Text
+
+8. Tick these options if visible:
+
+   Allow Reports
+   Allow Search
+   Launch New Custom Tab Wizard after saving this custom object
+
+9. Click Save.
+
+10. If Custom Tab Wizard opens, create Student tab:
+
+   Tab Style: Select any style
+   Click Next
+   Click Next
+   Click Save
+
+11. If Custom Tab Wizard does not open, create tab manually:
+
+   Go to Setup
+   Search Tabs
+   Open Tabs
+   Under Custom Object Tabs, click New
+   Object: Student
+   Tab Style: Select any style
+   Click Next
+   Click Next
+   Click Save
+
+12. Now create Student fields.
+
+13. Go to Setup.
+
+14. Open Object Manager.
+
+15. Open Student object.
+
+16. Click Fields & Relationships.
+
+17. Click New.
+
+18. Create Roll Number field:
+
+   Data Type: Number
+   Field Label: Roll Number
+   Length: 10
+   Decimal Places: 0
+   Field Name: Roll_Number
+   Click Next
+   Click Next
+   Click Save & New
+
+19. Create Email field:
+
+   Data Type: Text
+   Field Label: Email
+   Length: 80
+   Field Name: Email
+   Click Next
+   Click Next
+   Click Save & New
+
+20. Create Marks field:
+
+   Data Type: Number
+   Field Label: Marks
+   Length: 3
+   Decimal Places: 0
+   Field Name: Marks
+   Click Next
+   Click Next
+   Click Save & New
+
+21. Create Department field:
+
+   Data Type: Picklist
+   Field Label: Department
+   Field Name: Department
+
+   Enter values, each separated by a new line:
+
+   Computer
+   IT
+   ENTC
+   Mechanical
+   Civil
+
+   Click Next
+   Click Next
+   Click Save
+
+22. Now create validation rules for Student.
+
+23. In Object Manager, open Student object.
+
+24. Click Validation Rules.
+
+25. Click New.
+
+26. Create validation rule for Marks.
+
+   Rule Name:
+   Student_Marks_Validation
+
+   Error Condition Formula:
+
+   OR(Marks__c < 0, Marks__c > 100)
+
+   Error Message:
+   Marks must be between 0 and 100.
+
+   Error Location:
+   Field
+
+   Field:
+   Marks
+
+   Click Save
+
+27. Click New again.
+
+28. Create validation rule for Roll Number.
+
+   Rule Name:
+   Student_RollNumber_Validation
+
+   Error Condition Formula:
+
+   Roll_Number__c <= 0
+
+   Error Message:
+   Roll Number must be greater than 0.
+
+   Error Location:
+   Field
+
+   Field:
+   Roll Number
+
+   Click Save
+
+29. Click New again.
+
+30. Create validation rule for Email.
+
+   Rule Name:
+   Student_Email_Validation
+
+   Error Condition Formula:
+
+   NOT(CONTAINS(Email__c, "@"))
+
+   Error Message:
+   Email must contain @ symbol.
+
+   Error Location:
+   Field
+
+   Field:
+   Email
+
+   Click Save
+
+31. Student Name cannot be blank is already handled by Salesforce because Record Name is required.
+    If your teacher asks, say:
+    The standard Name field is mandatory by default, so Student Name cannot be blank.
+
+32. Now create Faculty object.
+
+33. Go to Setup.
+
+34. Open Object Manager.
+
+35. Click Create.
+
+36. Click Custom Object.
+
+37. Create Faculty object with these details:
+
+   Label: Faculty
+   Plural Label: Faculties
+   Object Name: Faculty
+   Record Name: Faculty Name
+   Data Type: Text
+
+38. Tick these options if visible:
+
+   Allow Reports
+   Allow Search
+   Launch New Custom Tab Wizard after saving this custom object
+
+39. Click Save.
+
+40. If Custom Tab Wizard opens, create Faculty tab:
+
+   Tab Style: Select any style
+   Click Next
+   Click Next
+   Click Save
+
+41. If Custom Tab Wizard does not open, create tab manually:
+
+   Go to Setup
+   Search Tabs
+   Open Tabs
+   Under Custom Object Tabs, click New
+   Object: Faculty
+   Tab Style: Select any style
+   Click Next
+   Click Next
+   Click Save
+
+42. Now create Faculty fields.
+
+43. Go to Setup.
+
+44. Open Object Manager.
+
+45. Open Faculty object.
+
+46. Click Fields & Relationships.
+
+47. Click New.
+
+48. Create Faculty ID field:
+
+   Data Type: Number
+   Field Label: Faculty ID
+   Length: 10
+   Decimal Places: 0
+   Field Name: Faculty_ID
+
+   Tick Unique if available.
+
+   Click Next
+   Click Next
+   Click Save & New
+
+49. Create Salary field:
+
+   Data Type: Currency
+   Field Label: Salary
+   Length: 10
+   Decimal Places: 2
+   Field Name: Salary
+   Click Next
+   Click Next
+   Click Save & New
+
+50. Create Department field:
+
+   Data Type: Picklist
+   Field Label: Department
+   Field Name: Department
+
+   Enter values, each separated by a new line:
+
+   Computer
+   IT
+   ENTC
+   Mechanical
+   Civil
+
+   Tick Required if available.
+
+   Click Next
+   Click Next
+   Click Save & New
+
+51. Create Joining Date field:
+
+   Data Type: Date
+   Field Label: Joining Date
+   Field Name: Joining_Date
+   Click Next
+   Click Next
+   Click Save
+
+52. Now create validation rules for Faculty.
+
+53. In Object Manager, open Faculty object.
+
+54. Click Validation Rules.
+
+55. Click New.
+
+56. Create validation rule for Faculty Name.
+
+   Rule Name:
+   Faculty_Name_Validation
+
+   Error Condition Formula:
+
+   LEN(Name) < 3
+
+   Error Message:
+   Faculty Name cannot be empty and must contain at least 3 characters.
+
+   Error Location:
+   Top of Page
+
+   Click Save
+
+57. Click New again.
+
+58. Create validation rule for Faculty ID.
+
+   Rule Name:
+   Faculty_ID_Positive_Validation
+
+   Error Condition Formula:
+
+   Faculty_ID__c <= 0
+
+   Error Message:
+   Faculty ID must be greater than 0.
+
+   Error Location:
+   Field
+
+   Field:
+   Faculty ID
+
+   Click Save
+
+59. For Faculty ID uniqueness:
+
+   Go to Object Manager
+   Open Faculty
+   Click Fields & Relationships
+   Open Faculty ID field
+   Click Edit
+   Tick Unique
+   Click Save
+
+60. Click New again under Validation Rules.
+
+61. Create validation rule for Salary.
+
+   Rule Name:
+   Faculty_Salary_Validation
+
+   Error Condition Formula:
+
+   OR(Salary__c <= 10000, Salary__c >= 500000)
+
+   Error Message:
+   Salary must be greater than 10,000 and less than 500,000.
+
+   Error Location:
+   Field
+
+   Field:
+   Salary
+
+   Click Save
+
+62. Department validation is handled by Picklist field.
+    If Department is marked Required, user must select department from available list only.
+
+63. Click New again.
+
+64. Create validation rule for Joining Date.
+
+   Rule Name:
+   Faculty_JoiningDate_Validation
+
+   Error Condition Formula:
+
+   Joining_Date__c > TODAY()
+
+   Error Message:
+   Joining Date cannot be a future date.
+
+   Error Location:
+   Field
+
+   Field:
+   Joining Date
+
+   Click Save
+
+65. Now create Lightning App.
+
+66. Go to Setup.
+
+67. Search App Manager.
+
+68. Open App Manager.
+
+69. Click New Lightning App.
+
+70. Fill app details:
+
+   App Name: College Management System
+   Developer Name: College_Management_System
+   Description: Lightning app to manage student and faculty records
+
+71. Click Next.
+
+72. Choose Standard Navigation.
+
+73. Click Next.
+
+74. Keep default branding or choose any color/icon.
+
+75. Click Next.
+
+76. On App Options, keep default settings.
+
+77. Click Next.
+
+78. On Utility Items, do not add anything.
+
+79. Click Next.
+
+80. On Navigation Items, add these items from Available Items to Selected Items:
+
+   Students
+   Faculties
+
+81. Click Next.
+
+82. On User Profiles, add:
+
+   System Administrator
+
+83. Click Save & Finish.
+
+84. Now run the app.
+
+85. Click the App Launcher icon.
+    It is the 9 dots icon on the top-left side.
+
+86. Search:
+
+   College
+
+87. Open:
+
+   College Management System
+
+88. You should see these tabs:
+
+   Students
+   Faculties
+
+89. Now create a valid Student record.
+
+90. Open Students tab.
+
+91. Click New.
+
+92. Enter valid student details:
+
+   Student Name: Rahul Sharma
+   Roll Number: 1
+   Email: rahul@gmail.com
+   Marks: 85
+   Department: Computer
+
+93. Click Save.
+
+94. The student record will be saved successfully.
+
+95. Now test Student validation rules.
+
+96. Open Students tab.
+
+97. Click New.
+
+98. Enter invalid student details:
+
+   Student Name: Test Student
+   Roll Number: 0
+   Email: rahulgmail.com
+   Marks: 150
+   Department: Computer
+
+99. Click Save.
+
+100. Salesforce will show errors:
+
+   Roll Number must be greater than 0.
+   Email must contain @ symbol.
+   Marks must be between 0 and 100.
+
+101. Now test blank student name.
+
+102. Click New.
+
+103. Keep Student Name blank.
+
+104. Enter other details:
+
+   Roll Number: 2
+   Email: test@gmail.com
+   Marks: 80
+   Department: Computer
+
+105. Click Save.
+
+106. Salesforce will not allow saving because Student Name is required.
+
+107. Now create valid Faculty record.
+
+108. Open Faculties tab.
+
+109. Click New.
+
+110. Enter valid faculty details:
+
+   Faculty Name: Amit Patil
+   Faculty ID: 101
+   Salary: 50000
+   Department: Computer
+   Joining Date: 14/05/2026
+
+111. Click Save.
+
+112. The faculty record will be saved successfully.
+
+113. Now test Faculty validation rules.
+
+114. Open Faculties tab.
+
+115. Click New.
+
+116. Enter invalid faculty details:
+
+   Faculty Name: AB
+   Faculty ID: 0
+   Salary: 8000
+   Department: Computer
+   Joining Date: 31/12/2099
+
+117. Click Save.
+
+118. Salesforce will show errors:
+
+   Faculty Name cannot be empty and must contain at least 3 characters.
+   Faculty ID must be greater than 0.
+   Salary must be greater than 10,000 and less than 500,000.
+   Joining Date cannot be a future date.
+
+119. Now test Faculty ID uniqueness.
+
+120. Open Faculties tab.
+
+121. Click New.
+
+122. Enter details using same Faculty ID already used:
+
+   Faculty Name: Suresh Kale
+   Faculty ID: 101
+   Salary: 60000
+   Department: IT
+   Joining Date: 14/05/2026
+
+123. Click Save.
+
+124. Salesforce will show duplicate value error for Faculty ID.
+
+125. If records do not appear after saving:
+
+   Click the dropdown beside Recently Viewed.
+   Select All.
+   Or click the Refresh icon.
+
+126. If College Management System app is not visible in App Launcher:
+
+   Go to Setup
+   Search App Manager
+   Open App Manager
+   Find College Management System
+   Click dropdown arrow
+   Click Edit
+   Go to User Profiles
+   Add System Administrator
+   Go to Navigation Items
+   Add Students and Faculties
+   Click Save
+
+127. If Students or Faculties tab is missing:
+
+   Go to Setup
+   Search Tabs
+   Open Tabs
+   Under Custom Object Tabs, click New
+   Select Student or Faculty object
+   Choose any tab style
+   Click Next
+   Click Next
+   Click Save
+
+128. If Faculty tab spelling is showing Facultys:
+
+   Go to Setup
+   Open Object Manager
+   Open Faculty object
+   Click Details
+   Click Edit
+   Change Plural Label to Faculties
+   Click Save
+
+129. After changing spelling:
+
+   Go to Setup
+   Search App Manager
+   Open App Manager
+   Find College Management System
+   Click dropdown arrow
+   Click Edit
+   Go to Navigation Items
+   Remove old Facultys tab if needed
+   Add Faculties tab
+   Click Save
+
+130. Refresh browser.
+
+131. Open App Launcher again.
+
+132. Search College.
+
+133. Open College Management System.
+
+134. Final practical demo flow:
+
+   Open College Management System
+   Open Students tab
+   Create one valid student record
+   Create one invalid student record and show validation errors
+   Open Faculties tab
+   Create one valid faculty record
+   Create one invalid faculty record and show validation errors
+   Show Faculty ID duplicate error
+   Explain that validation rules ensure data accuracy before saving records
+
+135. Final explanation:
+
+   This College Management Lightning Application is created using Salesforce custom objects.
+   Student and Faculty objects store records.
+   Validation rules are used to prevent invalid data.
+   Student marks must be between 0 and 100.
+   Roll number must be greater than 0.
+   Email must contain @ symbol.
+   Student name is required.
+   Faculty name must contain at least 3 characters.
+   Faculty ID must be greater than 0 and unique.
+   Salary must be greater than 10,000 and less than 500,000.
+   Department is selected from picklist values.
+   Joining date cannot be a future date.
