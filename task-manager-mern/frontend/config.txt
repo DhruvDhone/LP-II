@@ -1,0 +1,786 @@
+CC MERN TASK MANAGEMENT APPLICATION AWS DEPLOYMENT STEPS
+
+Project Name: task-manager-mern
+Instance Name: task-manager
+Public IP: 13.220.118.167
+Key File: task-manager.pem
+
+1. Connect to AWS EC2 from local system
+
+Open terminal on local system and run:
+
+cd ~/Downloads
+chmod 400 task-manager.pem
+ssh -i ~/Downloads/task-manager.pem ubuntu@13.220.118.167
+
+If it asks yes/no, type:
+
+yes
+
+2. Update Ubuntu server
+
+sudo apt update
+sudo apt upgrade -y
+
+3. Install required packages
+
+sudo apt install -y curl git nginx docker.io
+
+4. Install Node.js 20
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+Check versions:
+
+node -v
+npm -v
+
+5. Start and enable Docker
+
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ubuntu
+
+Now logout once:
+
+exit
+
+Login again:
+
+ssh -i ~/Downloads/task-manager.pem ubuntu@13.220.118.167
+
+6. Start MongoDB using Docker
+
+docker run -d --name mongodb -p 127.0.0.1:27017:27017 -v mongo_data:/data/db mongo:7
+
+Check MongoDB container:
+
+docker ps
+
+7. Create project folder
+
+cd /home/ubuntu
+mkdir -p task-manager-mern/backend/models
+mkdir -p task-manager-mern/backend/routes
+mkdir -p task-manager-mern/frontend/src
+
+8. Create backend package.json
+
+cat > /home/ubuntu/task-manager-mern/backend/package.json <<'EOF'
+{
+  "name": "task-manager-backend",
+  "version": "1.0.0",
+  "description": "Backend API for MERN Task Manager",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
+EOF
+
+9. Create backend .env file
+
+cat > /home/ubuntu/task-manager-mern/backend/.env <<'EOF'
+PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/taskmanager
+EOF
+
+10. Create backend server.js
+
+cat > /home/ubuntu/task-manager-mern/backend/server.js <<'EOF'
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+const taskRoutes = require("./routes/taskRoutes");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use("/api/tasks", taskRoutes);
+
+app.get("/", (req, res) => {
+  res.send("Task Manager Backend API is running");
+});
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected successfully");
+
+    app.listen(process.env.PORT, () => {
+      console.log("Server running on port " + process.env.PORT);
+    });
+  })
+  .catch((error) => {
+    console.log("MongoDB connection error:", error);
+  });
+EOF
+
+11. Create backend Task model
+
+cat > /home/ubuntu/task-manager-mern/backend/models/Task.js <<'EOF'
+const mongoose = require("mongoose");
+
+const taskSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String
+    },
+    status: {
+      type: String,
+      default: "Pending"
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+module.exports = mongoose.model("Task", taskSchema);
+EOF
+
+12. Create backend routes
+
+cat > /home/ubuntu/task-manager-mern/backend/routes/taskRoutes.js <<'EOF'
+const express = require("express");
+const Task = require("../models/Task");
+
+const router = express.Router();
+
+router.get("/", async (req, res) => {
+  try {
+    const tasks = await Task.find().sort({ createdAt: -1 });
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching tasks" });
+  }
+});
+
+router.post("/", async (req, res) => {
+  try {
+    const { title, description } = req.body;
+
+    const task = new Task({
+      title,
+      description,
+      status: "Pending"
+    });
+
+    const savedTask = await task.save();
+    res.status(201).json(savedTask);
+  } catch (error) {
+    res.status(500).json({ message: "Error creating task" });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  try {
+    const { title, description, status } = req.body;
+
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      { title, description, status },
+      { new: true }
+    );
+
+    res.json(updatedTask);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating task" });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    await Task.findByIdAndDelete(req.params.id);
+    res.json({ message: "Task deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting task" });
+  }
+});
+
+module.exports = router;
+EOF
+
+13. Create frontend package.json
+
+cat > /home/ubuntu/task-manager-mern/frontend/package.json <<'EOF'
+{
+  "name": "task-manager-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for MERN Task Manager",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "axios": "^1.7.9",
+    "vite": "^6.0.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {}
+}
+EOF
+
+14. Create frontend index.html
+
+cat > /home/ubuntu/task-manager-mern/frontend/index.html <<'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MERN Task Manager</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+EOF
+
+15. Create frontend main.jsx
+
+cat > /home/ubuntu/task-manager-mern/frontend/src/main.jsx <<'EOF'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.jsx";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+EOF
+
+16. Create frontend App.jsx
+
+cat > /home/ubuntu/task-manager-mern/frontend/src/App.jsx <<'EOF'
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+const API_URL = "/api/tasks";
+
+function App() {
+  const [tasks, setTasks] = useState([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [editId, setEditId] = useState(null);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get(API_URL);
+      setTasks(response.data);
+    } catch (error) {
+      console.log("Error fetching tasks", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (title.trim() === "") {
+      alert("Please enter task title");
+      return;
+    }
+
+    try {
+      if (editId) {
+        await axios.put(API_URL + "/" + editId, {
+          title: title,
+          description: description,
+          status: "Updated"
+        });
+        setEditId(null);
+      } else {
+        await axios.post(API_URL, {
+          title: title,
+          description: description
+        });
+      }
+
+      setTitle("");
+      setDescription("");
+      fetchTasks();
+    } catch (error) {
+      console.log("Error saving task", error);
+    }
+  };
+
+  const editTask = (task) => {
+    setTitle(task.title);
+    setDescription(task.description);
+    setEditId(task._id);
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(API_URL + "/" + id);
+      fetchTasks();
+    } catch (error) {
+      console.log("Error deleting task", error);
+    }
+  };
+
+  const completeTask = async (task) => {
+    try {
+      await axios.put(API_URL + "/" + task._id, {
+        title: task.title,
+        description: task.description,
+        status: "Completed"
+      });
+      fetchTasks();
+    } catch (error) {
+      console.log("Error completing task", error);
+    }
+  };
+
+  return (
+    <div className="page">
+      <div className="container">
+        <h1>MERN Task Management System</h1>
+        <p className="subtitle">Create, update, complete and delete tasks</p>
+
+        <form className="task-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Enter task title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+
+          <textarea
+            placeholder="Enter task description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          ></textarea>
+
+          <button type="submit">
+            {editId ? "Update Task" : "Add Task"}
+          </button>
+        </form>
+
+        <div className="task-list">
+          {tasks.length === 0 ? (
+            <p className="empty">No tasks available. Add your first task.</p>
+          ) : (
+            tasks.map((task) => (
+              <div className="task-card" key={task._id}>
+                <div className="task-info">
+                  <h2>{task.title}</h2>
+                  <p>{task.description}</p>
+                  <span className={task.status === "Completed" ? "done" : "pending"}>
+                    {task.status}
+                  </span>
+                </div>
+
+                <div className="buttons">
+                  <button type="button" className="complete" onClick={() => completeTask(task)}>
+                    Complete
+                  </button>
+                  <button type="button" className="edit" onClick={() => editTask(task)}>
+                    Edit
+                  </button>
+                  <button type="button" className="delete" onClick={() => deleteTask(task._id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+EOF
+
+17. Create frontend CSS
+
+cat > /home/ubuntu/task-manager-mern/frontend/src/index.css <<'EOF'
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef2f7;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  background: white;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+
+.subtitle {
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 30px;
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+input,
+textarea {
+  padding: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+textarea {
+  height: 90px;
+  resize: none;
+}
+
+button {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.task-form button {
+  background: #2563eb;
+  color: white;
+}
+
+.task-list {
+  margin-top: 30px;
+}
+
+.task-card {
+  background: #f8fafc;
+  border: 1px solid #dbeafe;
+  border-left: 6px solid #2563eb;
+  padding: 18px;
+  margin-bottom: 15px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.task-info {
+  flex: 1;
+}
+
+.task-card h2 {
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.task-card p {
+  margin: 0 0 10px;
+  color: #4b5563;
+}
+
+.pending {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.done {
+  background: #dcfce7;
+  color: #166534;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.complete {
+  background: #16a34a;
+  color: white;
+}
+
+.edit {
+  background: #f59e0b;
+  color: white;
+}
+
+.delete {
+  background: #dc2626;
+  color: white;
+}
+
+.empty {
+  text-align: center;
+  color: #6b7280;
+  font-size: 18px;
+}
+
+@media (max-width: 700px) {
+  .task-card {
+    flex-direction: column;
+  }
+
+  .buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+EOF
+
+18. Install backend dependencies
+
+cd /home/ubuntu/task-manager-mern/backend
+npm install
+
+19. Test backend once
+
+node server.js
+
+Expected output:
+
+MongoDB connected successfully
+Server running on port 5000
+
+Stop using:
+
+CTRL + C
+
+20. Install PM2
+
+sudo npm install -g pm2
+
+21. Start backend permanently using PM2
+
+cd /home/ubuntu/task-manager-mern/backend
+pm2 start server.js --name task-manager-backend
+pm2 save
+
+Check backend status:
+
+pm2 status
+
+22. Install frontend dependencies and build
+
+cd /home/ubuntu/task-manager-mern/frontend
+npm install
+npm run build
+
+23. Configure Nginx
+
+sudo mkdir -p /var/www/html
+sudo rm -rf /var/www/html/*
+sudo cp -r /home/ubuntu/task-manager-mern/frontend/dist/* /var/www/html/
+
+Create Nginx config:
+
+cat > /tmp/default_nginx <<'EOF'
+server {
+    listen 80;
+    server_name 13.220.118.167;
+
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+EOF
+
+sudo cp /tmp/default_nginx /etc/nginx/sites-available/default
+
+24. Restart Nginx
+
+sudo nginx -t
+sudo systemctl restart nginx
+sudo systemctl enable nginx
+
+25. Test from terminal
+
+curl http://127.0.0.1:5000
+curl http://127.0.0.1:5000/api/tasks
+curl http://13.220.118.167
+curl http://13.220.118.167/api/tasks
+
+Expected backend output:
+
+Task Manager Backend API is running
+
+Expected API output:
+
+[]
+
+26. Open website in browser
+
+http://13.220.118.167
+
+27. Test application
+
+Add a task.
+Update the task.
+Complete the task.
+Delete the task.
+Refresh the page and check that data is still saved.
+
+28. Useful commands for checking during practical
+
+Check backend:
+
+pm2 status
+
+Restart backend:
+
+pm2 restart task-manager-backend
+
+View backend logs:
+
+pm2 logs task-manager-backend
+
+Check MongoDB:
+
+docker ps
+
+Start MongoDB if stopped:
+
+docker start mongodb
+
+Restart backend after starting MongoDB:
+
+pm2 restart task-manager-backend
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+
+Check Nginx:
+
+sudo systemctl status nginx
+
+Check frontend files:
+
+ls -l /var/www/html
+ls -l /var/www/html/assets
+
+29. If old website is showing
+
+cd /home/ubuntu/task-manager-mern/frontend
+npm run build
+sudo rm -rf /var/www/html/*
+sudo cp -r dist/* /var/www/html/
+sudo systemctl restart nginx
+
+Then hard refresh browser:
+
+Cmd + Shift + R
+
+30. If website is blank
+
+Check API:
+
+curl http://13.220.118.167/api/tasks
+
+Check Nginx:
+
+sudo nginx -t
+
+Check backend:
+
+pm2 status
+
+Check MongoDB:
+
+docker ps
+
+Restart everything:
+
+docker start mongodb
+pm2 restart task-manager-backend
+sudo systemctl restart nginx
+
+31. Final project explanation
+
+This project is a MERN-based Task Management Application.
+
+The frontend is developed using React.js.
+The backend is developed using Node.js and Express.js.
+MongoDB is used as the database.
+The frontend sends requests to the backend using API endpoints.
+The backend stores and retrieves task data from MongoDB.
+Nginx is used to serve the React frontend.
+Nginx also forwards API requests to the backend running on port 5000.
+PM2 keeps the backend running continuously.
+
+Final flow:
+
+User Browser -> Nginx -> React Frontend -> Express API -> MongoDB Database
+
+Frontend URL:
+
+http://13.220.118.167
+
+Backend API URL:
+
+http://13.220.118.167/api/tasks
