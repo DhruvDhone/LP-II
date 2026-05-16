@@ -1,0 +1,657 @@
+# Update Ubuntu packages
+sudo apt update
+sudo apt upgrade -y
+
+# Install required tools
+sudo apt install -y curl git nginx
+
+# Install Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Check Node and NPM version
+node -v
+npm -v
+
+# Go to home directory
+cd ~
+
+# Create main project folder
+mkdir event-registration-mern
+cd event-registration-mern
+
+# Create backend and frontend folders
+mkdir backend frontend
+
+# Go to backend folder
+cd backend
+
+# Create backend package.json file
+cat > package.json <<'EOF'
+{
+  "name": "event-registration-backend",
+  "version": "1.0.0",
+  "description": "Backend for Online Event Registration System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "mongoose": "^8.2.1"
+  }
+}
+EOF
+
+# Create backend server.js file
+cat > server.js <<'EOF'
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+require("dotenv").config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+const PORT = process.env.PORT || 5000;
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected successfully");
+  })
+  .catch((error) => {
+    console.log("MongoDB connection error:", error.message);
+  });
+
+const registrationSchema = new mongoose.Schema({
+  fullName: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  college: {
+    type: String,
+    required: true
+  },
+  eventName: {
+    type: String,
+    required: true
+  },
+  registeredAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Registration = mongoose.model("Registration", registrationSchema);
+
+app.get("/", (req, res) => {
+  res.send("Online Event Registration Backend Running");
+});
+
+app.post("/api/register", async (req, res) => {
+  try {
+    const { fullName, email, phone, college, eventName } = req.body;
+
+    if (!fullName || !email || !phone || !college || !eventName) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+      });
+    }
+
+    const newRegistration = new Registration({
+      fullName,
+      email,
+      phone,
+      college,
+      eventName
+    });
+
+    await newRegistration.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Registration successful"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+});
+
+app.get("/api/registrations", async (req, res) => {
+  try {
+    const registrations = await Registration.find().sort({ registeredAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: registrations
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch registrations"
+    });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
+});
+EOF
+
+# Create .env file for backend
+cat > .env <<'EOF'
+PORT=5000
+MONGO_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/eventdb?retryWrites=true&w=majority
+EOF
+
+# Open .env file and replace MONGO_URI with your MongoDB Atlas connection string
+nano .env
+
+# Install backend dependencies
+npm install
+
+# Test backend
+node server.js
+
+# Stop backend after checking output
+# Press CTRL + C manually
+
+# Go to frontend folder
+cd ~/event-registration-mern/frontend
+
+# Create frontend package.json file
+cat > package.json <<'EOF'
+{
+  "name": "event-registration-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Online Event Registration System",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "axios": "^1.6.7"
+  },
+  "devDependencies": {}
+}
+EOF
+
+# Create index.html file
+cat > index.html <<'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Event Registration</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+EOF
+
+# Create src folder
+mkdir -p src
+
+# Create React main.jsx file
+cat > src/main.jsx <<'EOF'
+import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom/client";
+import axios from "axios";
+import "./style.css";
+
+function App() {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    college: "",
+    eventName: "Tech Fest"
+  });
+
+  const [message, setMessage] = useState("");
+  const [registrations, setRegistrations] = useState([]);
+
+  const fetchRegistrations = async () => {
+    try {
+      const response = await axios.get("/api/registrations");
+      setRegistrations(response.data.data);
+    } catch (error) {
+      console.log("Unable to fetch registrations");
+    }
+  };
+
+  useEffect(() => {
+    fetchRegistrations();
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post("/api/register", formData);
+      setMessage(response.data.message);
+
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        college: "",
+        eventName: "Tech Fest"
+      });
+
+      fetchRegistrations();
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Registration failed");
+    }
+  };
+
+  return (
+    <div className="page">
+      <div className="hero">
+        <h1>Online Event Registration System</h1>
+        <p>Register for college events quickly and securely.</p>
+      </div>
+
+      <div className="container">
+        <div className="card">
+          <h2>Event Registration Form</h2>
+
+          {message && <div className="message">{message}</div>}
+
+          <form onSubmit={handleSubmit}>
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              placeholder="Enter your full name"
+              required
+            />
+
+            <label>Email Address</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              required
+            />
+
+            <label>Phone Number</label>
+            <input
+              type="text"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter your phone number"
+              required
+            />
+
+            <label>College Name</label>
+            <input
+              type="text"
+              name="college"
+              value={formData.college}
+              onChange={handleChange}
+              placeholder="Enter your college name"
+              required
+            />
+
+            <label>Select Event</label>
+            <select
+              name="eventName"
+              value={formData.eventName}
+              onChange={handleChange}
+              required
+            >
+              <option value="Tech Fest">Tech Fest</option>
+              <option value="Coding Competition">Coding Competition</option>
+              <option value="AI Workshop">AI Workshop</option>
+              <option value="Cloud Computing Seminar">Cloud Computing Seminar</option>
+              <option value="Project Exhibition">Project Exhibition</option>
+            </select>
+
+            <button type="submit">Register Now</button>
+          </form>
+        </div>
+
+        <div className="card">
+          <h2>Registered Participants</h2>
+
+          {registrations.length === 0 ? (
+            <p className="empty">No registrations yet.</p>
+          ) : (
+            <div className="table-box">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Event</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {registrations.map((item) => (
+                    <tr key={item._id}>
+                      <td>{item.fullName}</td>
+                      <td>{item.email}</td>
+                      <td>{item.eventName}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+EOF
+
+# Create CSS file
+cat > src/style.css <<'EOF'
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #f2f6ff;
+  color: #222;
+}
+
+.page {
+  min-height: 100vh;
+}
+
+.hero {
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: white;
+  text-align: center;
+  padding: 45px 20px;
+}
+
+.hero h1 {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.hero p {
+  font-size: 18px;
+}
+
+.container {
+  width: 90%;
+  max-width: 1100px;
+  margin: 30px auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.card {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card h2 {
+  margin-bottom: 20px;
+  color: #1e3c72;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+input,
+select {
+  padding: 12px;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #1e3c72;
+}
+
+button {
+  margin-top: 20px;
+  padding: 13px;
+  border: none;
+  background: #1e3c72;
+  color: white;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #2a5298;
+}
+
+.message {
+  background: #e8f5e9;
+  color: #1b5e20;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.table-box {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background: #1e3c72;
+  color: white;
+}
+
+.empty {
+  color: #666;
+}
+
+@media (max-width: 800px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+}
+EOF
+
+# Install frontend dependencies
+npm install
+
+# Build frontend
+npm run build
+
+# Install PM2 globally
+sudo npm install -g pm2
+
+# Go to backend folder
+cd ~/event-registration-mern/backend
+
+# Start backend using PM2
+pm2 start server.js --name event-backend
+
+# Save PM2 process
+pm2 save
+
+# Enable PM2 startup
+pm2 startup
+
+# After above command, copy and run the command shown by PM2 starting with sudo env PATH
+
+# Check PM2 backend status
+pm2 status
+
+# Test backend locally
+curl http://localhost:5000
+
+# Remove old Nginx html folder
+sudo rm -rf /var/www/html
+
+# Create fresh Nginx html folder
+sudo mkdir -p /var/www/html
+
+# Copy frontend build files to Nginx folder
+sudo cp -r ~/event-registration-mern/frontend/dist/* /var/www/html/
+
+# Configure Nginx for React frontend and Express backend API
+sudo cat > /etc/nginx/sites-available/default <<'EOF'
+server {
+    listen 80;
+    server_name _;
+
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:5000/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+EOF
+
+# Test Nginx configuration
+sudo nginx -t
+
+# Restart Nginx
+sudo systemctl restart nginx
+
+# Enable Nginx on boot
+sudo systemctl enable nginx
+
+# Check Nginx status
+sudo systemctl status nginx
+
+# In AWS Console allow HTTP port 80
+# EC2 -> Instances -> Select Instance -> Security -> Security Group -> Edit inbound rules
+# Add Rule -> Type HTTP -> Port 80 -> Source 0.0.0.0/0 -> Save rules
+
+# Open website in browser
+# http://your-ec2-public-ip
+
+# Open backend API in browser
+# http://your-ec2-public-ip/api/registrations
+
+# Show project folder
+cd ~/event-registration-mern
+ls
+
+# Show backend files
+cd ~/event-registration-mern/backend
+ls
+cat server.js
+cat .env
+
+# Show frontend files
+cd ~/event-registration-mern/frontend
+ls
+cat src/main.jsx
+cat src/style.css
+
+# Restart backend if needed
+pm2 restart event-backend
+
+# Check backend status
+pm2 status
+
+# View backend logs
+pm2 logs event-backend
+
+# Rebuild frontend after changes
+cd ~/event-registration-mern/frontend
+npm run build
+sudo rm -rf /var/www/html/*
+sudo cp -r dist/* /var/www/html/
+sudo systemctl restart nginx
+
+# Check ports 80 and 5000
+sudo ss -tulnp | grep -E '80|5000'
+
+# Final practical explanation
+# Frontend is built using React and Vite
+# Backend is built using Node.js and Express.js
+# MongoDB Atlas is used as the cloud-hosted database
+# Nginx serves the frontend on port 80
+# Nginx forwards API requests to backend on port 5000
+# PM2 keeps backend running continuously
+# User fills event form and submits details
+# Backend stores registration details in MongoDB Atlas
+# Registered participants are displayed on the website
