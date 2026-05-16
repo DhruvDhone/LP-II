@@ -1,0 +1,304 @@
+/* 
+CC - Employee Management System
+Menu-driven Employee Management System in Salesforce using Apex Console
+
+Object Required:
+Employee__c
+
+Fields Required:
+Emp_ID__c        Text
+Emp_Name__c      Text
+Email__c         Email
+Birth_Date__c    Date
+Department__c    Text
+*/
+
+public class EmployeeManagementSystem {
+
+    public static void showMenu() {
+        System.debug('========== EMPLOYEE MANAGEMENT SYSTEM ==========');
+        System.debug('1. Add Employee');
+        System.debug('2. View All Employees');
+        System.debug('3. Search Employee by Emp ID');
+        System.debug('4. Update Employee');
+        System.debug('5. Delete Employee');
+        System.debug('6. Exit');
+        System.debug('================================================');
+    }
+
+    public static void addEmployee(String empId, String empName, String email, Date birthDate, String department) {
+
+        Employee__c emp = new Employee__c();
+
+        emp.Emp_ID__c = empId;
+        emp.Emp_Name__c = empName;
+        emp.Email__c = email;
+        emp.Birth_Date__c = birthDate;
+        emp.Department__c = department;
+
+        insert emp;
+
+        System.debug('Employee Added Successfully');
+        System.debug('Employee ID: ' + empId);
+        System.debug('Employee Name: ' + empName);
+    }
+
+    public static void viewAllEmployees() {
+
+        List<Employee__c> empList = [
+            SELECT Id, Emp_ID__c, Emp_Name__c, Email__c, Birth_Date__c, Department__c
+            FROM Employee__c
+        ];
+
+        if(empList.isEmpty()) {
+            System.debug('No Employee Records Found');
+        } else {
+            System.debug('========== EMPLOYEE RECORDS ==========');
+
+            for(Employee__c emp : empList) {
+                System.debug('Record Id: ' + emp.Id);
+                System.debug('Emp ID: ' + emp.Emp_ID__c);
+                System.debug('Emp Name: ' + emp.Emp_Name__c);
+                System.debug('Email: ' + emp.Email__c);
+                System.debug('Birth Date: ' + emp.Birth_Date__c);
+                System.debug('Department: ' + emp.Department__c);
+                System.debug('--------------------------------------');
+            }
+        }
+    }
+
+    public static void searchEmployee(String empId) {
+
+        List<Employee__c> empList = [
+            SELECT Id, Emp_ID__c, Emp_Name__c, Email__c, Birth_Date__c, Department__c
+            FROM Employee__c
+            WHERE Emp_ID__c = :empId
+        ];
+
+        if(empList.isEmpty()) {
+            System.debug('Employee Not Found with Emp ID: ' + empId);
+        } else {
+            Employee__c emp = empList[0];
+
+            System.debug('========== EMPLOYEE FOUND ==========');
+            System.debug('Record Id: ' + emp.Id);
+            System.debug('Emp ID: ' + emp.Emp_ID__c);
+            System.debug('Emp Name: ' + emp.Emp_Name__c);
+            System.debug('Email: ' + emp.Email__c);
+            System.debug('Birth Date: ' + emp.Birth_Date__c);
+            System.debug('Department: ' + emp.Department__c);
+        }
+    }
+
+    public static void updateEmployee(String empId, String newName, String newEmail, Date newBirthDate, String newDepartment) {
+
+        List<Employee__c> empList = [
+            SELECT Id, Emp_ID__c, Emp_Name__c, Email__c, Birth_Date__c, Department__c
+            FROM Employee__c
+            WHERE Emp_ID__c = :empId
+        ];
+
+        if(empList.isEmpty()) {
+            System.debug('Employee Not Found with Emp ID: ' + empId);
+        } else {
+            Employee__c emp = empList[0];
+
+            emp.Emp_Name__c = newName;
+            emp.Email__c = newEmail;
+            emp.Birth_Date__c = newBirthDate;
+            emp.Department__c = newDepartment;
+
+            update emp;
+
+            System.debug('Employee Updated Successfully');
+            System.debug('Emp ID: ' + empId);
+            System.debug('Updated Name: ' + newName);
+            System.debug('Updated Email: ' + newEmail);
+            System.debug('Updated Birth Date: ' + newBirthDate);
+            System.debug('Updated Department: ' + newDepartment);
+        }
+    }
+
+    public static void deleteEmployee(String empId) {
+
+        List<Employee__c> empList = [
+            SELECT Id, Emp_ID__c, Emp_Name__c
+            FROM Employee__c
+            WHERE Emp_ID__c = :empId
+        ];
+
+        if(empList.isEmpty()) {
+            System.debug('Employee Not Found with Emp ID: ' + empId);
+        } else {
+            Employee__c emp = empList[0];
+
+            delete emp;
+
+            System.debug('Employee Deleted Successfully');
+            System.debug('Deleted Emp ID: ' + empId);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+STEPS TO RUN IN SALESFORCE
+
+1. Login to Salesforce.
+
+2. Click on Setup.
+
+3. Open Object Manager.
+
+4. Click Create Object.
+
+5. Create Custom Object:
+   Label: Employee
+   Plural Label: Employees
+   Object Name: Employee
+   API Name: Employee__c
+
+6. Save the object.
+
+7. Open the Employee object.
+
+8. Go to Fields & Relationships.
+
+9. Create the following fields.
+
+Field 1:
+Data Type: Text
+Field Label: Emp ID
+Field Name: Emp_ID
+Length: 20
+
+Field 2:
+Data Type: Text
+Field Label: Emp Name
+Field Name: Emp_Name
+Length: 50
+
+Field 3:
+Data Type: Email
+Field Label: Email
+Field Name: Email
+
+Field 4:
+Data Type: Date
+Field Label: Birth Date
+Field Name: Birth_Date
+
+Field 5:
+Data Type: Text
+Field Label: Department
+Field Name: Department
+Length: 50
+
+10. Open Developer Console.
+
+11. Click File.
+
+12. Click New.
+
+13. Click Apex Class.
+
+14. Class Name:
+EmployeeManagementSystem
+
+15. Paste the given .apxc code.
+
+16. Save the class.
+
+17. To run the program, go to Developer Console.
+
+18. Click Debug.
+
+19. Click Open Execute Anonymous Window.
+
+20. Paste the following commands one by one according to the operation you want to perform.
+
+TO DISPLAY MENU:
+
+EmployeeManagementSystem.showMenu();
+
+
+TO ADD EMPLOYEE:
+
+EmployeeManagementSystem.addEmployee(
+    'E101',
+    'Rahul Sharma',
+    'rahul@gmail.com',
+    Date.newInstance(2002, 5, 15),
+    'Computer'
+);
+
+
+TO ADD ANOTHER EMPLOYEE:
+
+EmployeeManagementSystem.addEmployee(
+    'E102',
+    'Priya Patil',
+    'priya@gmail.com',
+    Date.newInstance(2001, 8, 20),
+    'IT'
+);
+
+
+TO VIEW ALL EMPLOYEES:
+
+EmployeeManagementSystem.viewAllEmployees();
+
+
+TO SEARCH EMPLOYEE BY EMP ID:
+
+EmployeeManagementSystem.searchEmployee('E101');
+
+
+TO UPDATE EMPLOYEE:
+
+EmployeeManagementSystem.updateEmployee(
+    'E101',
+    'Rahul S Sharma',
+    'rahulsharma@gmail.com',
+    Date.newInstance(2002, 5, 15),
+    'AIML'
+);
+
+
+TO DELETE EMPLOYEE:
+
+EmployeeManagementSystem.deleteEmployee('E102');
+
+
+21. After pasting the command, click Execute.
+
+22. To see the output, open the Logs tab in Developer Console.
+
+23. Double click the latest log.
+
+24. Tick Debug Only.
+
+25. The output will be visible using System.debug messages.
+
+IMPORTANT:
+This is console-based because input and output are handled using Developer Console and Execute Anonymous Window.
+Salesforce Apex does not support scanf/cin type direct keyboard input like C/C++ or Java console.
+So menu operations are performed by calling methods from Execute Anonymous Window.
