@@ -1,0 +1,167 @@
+public class ProductInventoryController {
+
+    public Product_Inventory__c product { get; set; }
+    public List<Product_Inventory__c> productList { get; set; }
+
+    public String manufactureDateText { get; set; }
+    public String expiryDateText { get; set; }
+
+    public ProductInventoryController() {
+        product = new Product_Inventory__c();
+        manufactureDateText = '';
+        expiryDateText = '';
+        loadProducts();
+    }
+
+    public void loadProducts() {
+        productList = [
+            SELECT Id, Name, Serial_No__c, Manufacture_Date__c, Expiry_Date__c
+            FROM Product_Inventory__c
+            ORDER BY CreatedDate DESC
+        ];
+    }
+
+    public PageReference saveProduct() {
+        try {
+            product.Manufacture_Date__c = convertTextToDate(manufactureDateText);
+            product.Expiry_Date__c = convertTextToDate(expiryDateText);
+
+            insert product;
+
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.CONFIRM,
+                'Product saved successfully!'
+            ));
+
+            clearValues();
+            loadProducts();
+
+        } catch (Exception e) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Error: Please select valid dates.'
+            ));
+        }
+
+        return null;
+    }
+
+    public PageReference editProduct() {
+        try {
+            Id productId = ApexPages.currentPage().getParameters().get('pid');
+
+            product = [
+                SELECT Id, Name, Serial_No__c, Manufacture_Date__c, Expiry_Date__c
+                FROM Product_Inventory__c
+                WHERE Id = :productId
+                LIMIT 1
+            ];
+
+            manufactureDateText = convertDateToText(product.Manufacture_Date__c);
+            expiryDateText = convertDateToText(product.Expiry_Date__c);
+
+        } catch (Exception e) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Error while editing product.'
+            ));
+        }
+
+        return null;
+    }
+
+    public PageReference updateProduct() {
+        try {
+            product.Manufacture_Date__c = convertTextToDate(manufactureDateText);
+            product.Expiry_Date__c = convertTextToDate(expiryDateText);
+
+            update product;
+
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.CONFIRM,
+                'Product updated successfully!'
+            ));
+
+            clearValues();
+            loadProducts();
+
+        } catch (Exception e) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Error: Please select valid dates.'
+            ));
+        }
+
+        return null;
+    }
+
+    public PageReference deleteProduct() {
+        try {
+            Id productId = ApexPages.currentPage().getParameters().get('pid');
+
+            Product_Inventory__c p = [
+                SELECT Id
+                FROM Product_Inventory__c
+                WHERE Id = :productId
+                LIMIT 1
+            ];
+
+            delete p;
+
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.CONFIRM,
+                'Product deleted successfully!'
+            ));
+
+            clearValues();
+            loadProducts();
+
+        } catch (Exception e) {
+            ApexPages.addMessage(new ApexPages.Message(
+                ApexPages.Severity.ERROR,
+                'Error while deleting product.'
+            ));
+        }
+
+        return null;
+    }
+
+    public PageReference clearForm() {
+        clearValues();
+        return null;
+    }
+
+    public void clearValues() {
+        product = new Product_Inventory__c();
+        manufactureDateText = '';
+        expiryDateText = '';
+    }
+
+    public Date convertTextToDate(String dateValue) {
+        if (String.isBlank(dateValue)) {
+            return null;
+        }
+
+        return Date.valueOf(dateValue);
+    }
+
+    public String convertDateToText(Date d) {
+        if (d == null) {
+            return '';
+        }
+
+        String month = String.valueOf(d.month());
+        String day = String.valueOf(d.day());
+        String year = String.valueOf(d.year());
+
+        if (month.length() == 1) {
+            month = '0' + month;
+        }
+
+        if (day.length() == 1) {
+            day = '0' + day;
+        }
+
+        return year + '-' + month + '-' + day;
+    }
+}
