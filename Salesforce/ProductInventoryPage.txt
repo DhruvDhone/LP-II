@@ -1,0 +1,248 @@
+<apex:page controller="ProductInventoryController"
+           showHeader="true"
+           sidebar="false"
+           docType="html-5.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+        }
+
+        .main-box {
+            width: 92%;
+            margin: 25px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .heading {
+            text-align: center;
+            color: #1f4e79;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            background: #1f4e79;
+            color: white;
+            padding: 14px 22px;
+            border-radius: 6px;
+            font-size: 28px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .form-table td {
+            padding: 18px;
+            font-size: 20px;
+        }
+
+        .label {
+            font-weight: bold;
+            width: 300px;
+            color: #222;
+        }
+
+        .inputBox {
+            width: 420px;
+            height: 42px;
+            font-size: 18px;
+            padding: 6px;
+            border: 1px solid #777;
+            border-radius: 5px;
+        }
+
+        .dateBox {
+            width: 420px;
+            height: 42px;
+            font-size: 18px;
+            padding: 6px;
+            border: 1px solid #777;
+            border-radius: 5px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 6px;
+            border: none;
+            background: #1f4e79;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .btn:hover {
+            background: #163a5a;
+        }
+
+        .table-style {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .table-style th {
+            background: #1f4e79;
+            color: white;
+            padding: 12px;
+            border: 1px solid #ccc;
+            font-size: 18px;
+        }
+
+        .table-style td {
+            padding: 12px;
+            border: 1px solid #ccc;
+            text-align: center;
+            font-size: 17px;
+        }
+
+        .edit-link {
+            color: green;
+            font-weight: bold;
+        }
+
+        .delete-link {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+
+    <div class="main-box">
+
+        <div class="heading">
+            Product Inventory Management System
+        </div>
+
+        <apex:form id="mainForm">
+
+            <apex:pageMessages />
+
+            <div class="section-title">
+                Add / Update Product
+            </div>
+
+            <table class="form-table">
+
+                <tr>
+                    <td class="label">Product Name</td>
+                    <td>
+                        <apex:inputText value="{!product.Name}" styleClass="inputBox" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">Serial No</td>
+                    <td>
+                        <apex:inputText value="{!product.Serial_No__c}" styleClass="inputBox" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">Manufacture Date</td>
+                    <td>
+                        <apex:inputHidden value="{!manufactureDateText}" id="mDateHidden" />
+
+                        <input type="date"
+                               class="dateBox"
+                               value="{!manufactureDateText}"
+                               min="1900-01-01"
+                               max="2099-12-31"
+                               onchange="document.getElementById('{!$Component.mDateHidden}').value=this.value;"
+                               oninput="document.getElementById('{!$Component.mDateHidden}').value=this.value;" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">Expiry Date</td>
+                    <td>
+                        <apex:inputHidden value="{!expiryDateText}" id="eDateHidden" />
+
+                        <input type="date"
+                               class="dateBox"
+                               value="{!expiryDateText}"
+                               min="1900-01-01"
+                               max="2099-12-31"
+                               onchange="document.getElementById('{!$Component.eDateHidden}').value=this.value;"
+                               oninput="document.getElementById('{!$Component.eDateHidden}').value=this.value;" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <td></td>
+                    <td>
+                        <apex:commandButton value="Save Product"
+                                            action="{!saveProduct}"
+                                            rendered="{!ISBLANK(product.Id)}"
+                                            styleClass="btn" />
+
+                        <apex:commandButton value="Update Product"
+                                            action="{!updateProduct}"
+                                            rendered="{!NOT(ISBLANK(product.Id))}"
+                                            styleClass="btn" />
+
+                        <apex:commandButton value="Clear"
+                                            action="{!clearForm}"
+                                            immediate="true"
+                                            styleClass="btn" />
+                    </td>
+                </tr>
+
+            </table>
+
+            <div class="section-title">
+                Product Inventory Records
+            </div>
+
+            <table class="table-style">
+
+                <tr>
+                    <th>Product Name</th>
+                    <th>Serial No</th>
+                    <th>Manufacture Date</th>
+                    <th>Expiry Date</th>
+                    <th>Action</th>
+                </tr>
+
+                <apex:repeat value="{!productList}" var="p">
+                    <tr>
+                        <td>{!p.Name}</td>
+                        <td>{!p.Serial_No__c}</td>
+                        <td>{!p.Manufacture_Date__c}</td>
+                        <td>{!p.Expiry_Date__c}</td>
+                        <td>
+                            <apex:commandLink value="Edit"
+                                              action="{!editProduct}"
+                                              styleClass="edit-link">
+                                <apex:param name="pid" value="{!p.Id}" />
+                            </apex:commandLink>
+
+                            &nbsp; | &nbsp;
+
+                            <apex:commandLink value="Delete"
+                                              action="{!deleteProduct}"
+                                              styleClass="delete-link"
+                                              onclick="return confirm('Are you sure you want to delete this product?');">
+                                <apex:param name="pid" value="{!p.Id}" />
+                            </apex:commandLink>
+                        </td>
+                    </tr>
+                </apex:repeat>
+
+            </table>
+
+        </apex:form>
+
+    </div>
+
+</apex:page>
